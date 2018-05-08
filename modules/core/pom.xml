@@ -338,7 +338,6 @@
                                 <phase>process-resources</phase>
                                 <configuration>
                                     <failOnError>false</failOnError>
-                                    
                                     <target>
                                         <tstamp>
                                             <format property="ignite.rel.date" pattern="ddMMyyyy" locale="en" />
@@ -360,12 +359,12 @@
                                             <regexp pattern="ignite.update.status.params=.*" />
                                             <substitution expression="ignite.update.status.params=ver=${project.version}&amp;product=${ignite.update.notifier.product}" />
                                         </replaceregexp>
-                                        
+
                                         <replaceregexp file="${props.file}" byline="true">
                                             <regexp pattern="ignite.version=.*" />
                                             <substitution expression="ignite.version=${project.version}" />
-                                        </replaceregexp>                                            
-                                        
+                                        </replaceregexp>
+
                                         <!-- git (to be replaced by git hooks)-->
 
                                         <exec executable="${git.exec}" outputproperty="ignite.build" failonerror="true">
@@ -395,8 +394,7 @@
                                             <regexp pattern="ignite.version=.*" />
                                             <substitution expression="ignite.version=${release.version}" />
                                         </replaceregexp>
-                                    </target>
-                                    
+                                    </target>                                    
                                 </configuration>
                             </execution>
                         </executions>
