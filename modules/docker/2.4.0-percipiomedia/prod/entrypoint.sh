@@ -15,8 +15,9 @@ function usage() {
   
   echo "--help      | -h    Display this message"
   echo "--verbose   | -v    Verbose output"
-  echo "--debug   | -d      Debug/Trace output"
-  echo "--launch    | -l    Command to be executed"  
+  echo "--debug     | -d      Debug/Trace output"
+  echo "--launch    | -l    Command(s) to be executed. \
+                            Use semicolon (;) as separator for passing in more than one command."  
 
   exit 1
 }
@@ -80,21 +81,26 @@ function main() {
   # dump environment into log file
   log_info "$(env)"
 	
-  # if conditions based on parsed command line arguments and environment variables
-  # TODO
+  # Are launch commands passed-in?
   if [ -n "${LAUNCH_CMD}" ]; then
     log_info "launch commands: ${LAUNCH_CMD}"
   
-    # several launch commands are separarted by semicolon
+    # several launch commands are separated by semicolon
     # semicolon (;) is set as delimiter
     IFS=';'      
       
-    read -ra commands <<< "${LAUNCH_CMD}"    # str is read into an array as tokens separated by IFS
+    # ${LAUNCH_CMD} is read into an array as tokens separated by IFS  
+    read -ra commands <<< "${LAUNCH_CMD}"
     
-    for cmd in "${commands[@]}"; do    # access each element of array
+    # access each element of array
+    for cmd in "${commands[@]}"; do
       log_info "launch: $cmd"
+      
+      # execute the passed-in command
       result=$("${cmd}")
+      
       exit_code=$?
+      
       log_info "launch result: exit code ${exit_code} output ${result}"
     done
     IFS=' '        # reset to default value after usage  

@@ -6,7 +6,8 @@ LOG_DATE='date +%Y/%m/%d:%H:%M:%S'
 LOG_FILE=${JOBCASE_LOGS}/entrypoint.log
 
 #
-# Append log message as INFO to log file .
+# Append log message as INFO to log file.
+# The log message gets written to stdout and log file.
 #
 function log_info {
   echo `$LOG_DATE`" INFO ${1}" | tee -a ${LOG_FILE}
@@ -14,6 +15,7 @@ function log_info {
 
 #
 # Append log message as ERROR to log fie.
+# The log message gets written to stderr and log file.
 #
 function log_error {
   echo `$LOG_DATE`" ERROR ${1}" | tee -a ${LOG_FILE} 1>&2
