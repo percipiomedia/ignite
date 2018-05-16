@@ -24,7 +24,7 @@ ENV IGNITE_VERSION 2.4.0
 ENV IGNITE_SERVER_PORT 11211
 ENV IGNITE_JMX_PORT 49112
 ENV IGNITE_DISCOVERY_PORT 47500
-ENV IGNITE_COMMUNICATIONT_PORT 47100
+ENV IGNITE_COMMUNICATION_PORT 47100
 ENV IGNITE_JDBC_PORT 10800
 ENV IGNITE_REST_PORT 8080
 
@@ -44,8 +44,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p ${JOBCASE_LOGS}
         
-WORKDIR ${IGNITE_HOME}
-
 # Copy apache ignite binaries
 COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin ${IGNITE_HOME}/
 
@@ -64,10 +62,18 @@ RUN chmod +x ${IGNITE_HOME}/run.sh
 # It includes the logic for further runtime configuration and/or operations.
 COPY ./entrypoint.sh ${JOBCASE_HOME}/
 RUN chmod +x ${JOBCASE_HOME}/entrypoint.sh
+COPY ./util.sh ${JOBCASE_HOME}/
+RUN chmod +x ${JOBCASE_HOME}/util.sh
 
-ENTRYPOINT /bin/bash ${JOBCASE_HOME}/entrypoint.sh
+WORKDIR ${JOBCASE_HOME}
+
+# The exec form is required for CMD providing default arguments 
+# instead shell form 'ENTRYPOINT /bin/bash ${JOBCASE_HOME}/entrypoint.sh'.
+# As a limitation, it will not do variable substitution like ${JOBCASE_HOME}.
+# So we call 'WORKDIR ${JOBCASE_HOME}' prior.
+ENTRYPOINT ["/bin/bash", "entrypoint.sh"]
 
 # Set default arguments for ENTRYPOINT
-CMD ["--launch", ${IGNITE_HOME}/run.sh]
+CMD ["--debug", "--launch", "${IGNITE_HOME}/run.sh"]
 
-EXPOSE $IGNITE_SERVER_PORT $IGNITE_COMMUNICATIONT_PORT $IGNITE_DISCOVERY_PORT $IGNITE_JMX_PORT $IGNITE_JDBC_PORT $IGNITE_REST_PORT
+EXPOSE $IGNITE_SERVER_PORT $IGNITE_COMMUNICATION_PORT $IGNITE_DISCOVERY_PORT $IGNITE_JMX_PORT $IGNITE_JDBC_PORT $IGNITE_REST_PORT
