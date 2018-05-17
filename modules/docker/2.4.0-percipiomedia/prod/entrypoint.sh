@@ -4,9 +4,6 @@
 
 source ./util.sh
 
-DEFAULT_JVM_OPTS='-Xms1g -Xmx1g -server -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC \
-                  -XX:+DisableExplicitGC'
-
 function usage() {
 
   echo "Usage: $0 OPTIONS"
@@ -77,6 +74,7 @@ function main() {
   local cmd
   local commands
   local exit_code
+  local cmd_pid
   
   # dump environment into log file
   log_info "$(env)"
@@ -94,14 +92,20 @@ function main() {
     
     # access each element of array
     for cmd in "${commands[@]}"; do
-      log_info "launch: $cmd"
+      # forcing bash to expand environment variables in the command string	
+      cmd=$(eval echo \"${cmd}\")	
+      
+      log_info "launch: ${cmd}"
       
       # execute the passed-in command
-      result=$("${cmd}")
+      eval "${cmd}"
+      
+      # the pid of the last background process
+      cmd_pid=$!
       
       exit_code=$?
       
-      log_info "launch result: exit code ${exit_code} output ${result}"
+      log_info "launch result: exit code ${exit_code} process id ${cmd_pid}"
     done
     IFS=' '        # reset to default value after usage  
   fi	

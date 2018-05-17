@@ -13,12 +13,28 @@
 #        |- bin
 #        |- libs
 #        |- config
+#
+# TODO:
+#  - Check if grid is active. If it is not active it will call control.sh --activate./ 
+#  - Make sure all Ignite log output is written to STDOUT/STDERR. 
+#    By default, docker logs shows the command’s STDOUT and STDERR. 
+#  - Expand environment variables in Ignite grid configuration file.
+#
 
 # Start from a Java image.
 FROM openjdk:8
 
 # Ignite version
 ENV IGNITE_VERSION 2.4.0
+
+# JobCase home
+ENV JOBCASE_HOME /opt/jobcase
+
+# Location of configuration files
+ENV JOBCASE_CONFIG ${JOBCASE_HOME}/config
+
+# Location of container log files
+ENV JOBCASE_LOGS ${JOBCASE_HOME}/logs
 
 # Ports
 ENV IGNITE_SERVER_PORT 11211
@@ -28,14 +44,23 @@ ENV IGNITE_COMMUNICATION_PORT 47100
 ENV IGNITE_JDBC_PORT 10800
 ENV IGNITE_REST_PORT 8080
 
-# JobCase home
-ENV JOBCASE_HOME /opt/jobcase
+# verbose mode in Ignite
+ENV IGNITE_QUIET false
 
-# Location of container log files
-ENV JOBCASE_LOGS ${JOBCASE_HOME}/logs
+# Ignite cluster definition file
+ENV CONFIG_URI ${JOBCASE_CONFIG}/default.node.config.xml
+
+# root directory where Ignite will persist data, indexes and so on
+ENV IGNITE_PERSISTANT_STORE ${JOBCASE_HOME}/db
+
+# ip dicovery volume
+ENV IGNITE_DISCOVERY /opt/jobcase/discovery
 
 # Ignite home
 ENV IGNITE_HOME ${JOBCASE_HOME}/apache-ignite-fabric
+
+# Ignite JVM settings
+ENV JVM_OPTS "-Xms1g -Xmx1g -server -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC"
 
 # Do not rely on anything provided by base image(s), but be explicit, if they are installed already it is noop then
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -51,7 +76,10 @@ COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin ${IGNITE_HOME}/
 COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-rest-http ${IGNITE_HOME}/libs/ignite-rest-http/
 
 # Copy REST client configuration file
-COPY ./jetty-config.xml ${JOBCASE_HOME}/
+COPY ./jetty-config.xml ${JOBCASE_CONFIG}/
+
+# Copy default grid configuration file
+COPY ./default.node.config.xml ${JOBCASE_CONFIG}/
 
 # Copy sh files and set permission
 COPY ./run.sh ${IGNITE_HOME}/
@@ -74,6 +102,6 @@ WORKDIR ${JOBCASE_HOME}
 ENTRYPOINT ["/bin/bash", "entrypoint.sh"]
 
 # Set default arguments for ENTRYPOINT
-CMD ["--debug", "--launch", "${IGNITE_HOME}/run.sh"]
+CMD ["--debug", "--launch", "${IGNITE_HOME}/run.sh &"]
 
 EXPOSE $IGNITE_SERVER_PORT $IGNITE_COMMUNICATION_PORT $IGNITE_DISCOVERY_PORT $IGNITE_JMX_PORT $IGNITE_JDBC_PORT $IGNITE_REST_PORT
