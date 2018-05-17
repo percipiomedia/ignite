@@ -78,6 +78,15 @@ COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-
 # Copy REST client configuration file
 COPY ./jetty-config.xml ${JOBCASE_CONFIG}/
 
+# Copy comnmon grid configuration file
+COPY ./common.node.config.xml ${JOBCASE_CONFIG}/
+
+# Copy comnmon grid configuration file
+COPY ./file.discovery.node.config.xml ${JOBCASE_CONFIG}/
+
+# Copy s3 bucket discovery grid configuration file
+COPY ./s3bucket.discovery.node.config.xml ${JOBCASE_CONFIG}/
+
 # Copy default grid configuration file
 COPY ./default.node.config.xml ${JOBCASE_CONFIG}/
 

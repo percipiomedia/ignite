@@ -22,10 +22,8 @@
        xsi:schemaLocation="
        http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd">
-    <!--
-        Alter configuration below as needed.
-    -->
-    <bean id="grid.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
+
+   <bean abstract="true" id="grid.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
         <!-- Set to true to enable distributed class loading, default is false. -->
         <property name="peerClassLoadingEnabled" value="true"/>
         
@@ -112,38 +110,5 @@
                 <property name="usePairedConnections" value="false"/>
             </bean>
        </property>
-       
-        <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
-        <property name="discoverySpi">
-            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
-                <property name="localPort" value="47500"/>
-                <property name="localPortRange" value="1"/>
-                <property name="ipFinder">
-                    <!-- local FS discovery using a common mounted volume -->
-                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.sharedfs.TcpDiscoverySharedFsIpFinder">
-                        <property name="path" value="/opt/jobcase/discovery"/>
-                    </bean>
-                    
-                    <!-- S3 bucket approach for discovery of cluster nodes
-                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.s3.TcpDiscoveryS3IpFinder">
-                        <property name="bucketName" value="staging-mlstore-ignite-discovery-01"/>
-                        Ideally we would use awsCredentialsProvider here, and use the CredentialsProviderChain below
-                             but Ignite comes with an old AWS library that does not include the latter
-                        <property name="awsCredentials" ref="aws.creds"/>
-                        <property name="clientConfiguration">
-                            <bean class="com.amazonaws.ClientConfiguration">
-                                the default is 3, and in test we had issues where this was not enough to reliably start an instance
-                                     The S3 SLA talks about error rate per 5 minute period.  Circumstantial evidence points to 20s/try timeout
-                                <property name="maxErrorRetry" value="20"/>
-                            </bean>
-                        </property>
-                    </bean> -->
-                </property>
-            </bean>
-        </property>
-    </bean>
-    
-    <!-- The S3 buckets used allow access to Ignite nodes themselves, so we don't need additional credentials.
-         This will use anonymous credentials if no credentials are found -->
-    <bean id="aws.creds" class="com.amazonaws.auth.AnonymousAWSCredentials"/>    
+   </bean>
 </beans>

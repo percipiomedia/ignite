@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+       
+    <import resource="common.node.config.xml"/>
+       
+    <!--
+        Alter configuration below as needed.
+    -->
+    <bean parent="grid.cfg">
+        <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
+        <property name="discoverySpi">
+            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+                <property name="localPort" value="47500"/>
+                <property name="localPortRange" value="1"/>
+                <property name="ipFinder">
+                    <!-- local FS discovery using a common mounted volume -->
+                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.sharedfs.TcpDiscoverySharedFsIpFinder">
+                        <property name="path" value="/opt/jobcase/discovery"/>
+                    </bean>
+                </property>
+            </bean>
+        </property>              
+    </bean>
+</beans>
