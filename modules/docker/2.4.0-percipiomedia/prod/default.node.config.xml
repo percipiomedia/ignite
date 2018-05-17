@@ -53,9 +53,20 @@
                 <property name="defaultDataRegionConfiguration">
                     <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
                         <property name="persistenceEnabled" value="true"/>
+                        
+                        <!-- Increasing the buffer size to 1 GB. -->
+                        <property name="checkpointPageBufferSize" value="#{1024L * 1024 * 1024}"/>
+                        
+                        <property name="name" value="Default_Region"/>
+                        
+                        <!-- Setting the size of the default region to 2GB. -->
+                        <property name="maxSize" value="#{2L * 1024 * 1024 * 1024}"/>                        
                     </bean>
                 </property>
                 
+                <!-- Set the page size to 4 KB -->
+                <property name="pageSize" value="4096"/>
+                                
                 <!-- Path to the root directory where the Persistent Store will persist data and indexes.                      
                   -->
                 <!-- <property name="storagePath" value="${IGNITE_PERSISTANT_STORE}"/> -->
