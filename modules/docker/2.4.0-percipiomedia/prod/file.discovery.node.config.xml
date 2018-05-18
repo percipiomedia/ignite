@@ -15,7 +15,7 @@
         <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
         <property name="discoverySpi">
             <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
-                <property name="localPort" value="47500"/>
+                <property name="localPort" value="#{systemEnvironment['IGNITE_DISCOVERY_PORT']}"/>
                 <property name="localPortRange" value="1"/>
                 <property name="ipFinder">
                     <!-- local FS discovery using a common mounted volume -->
