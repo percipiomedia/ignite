@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!--
+        Alter configuration below as needed.
+    -->
+    <bean id="grid.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
+        <!-- Set to true to enable distributed class loading, default is false. -->
+        <property name="peerClassLoadingEnabled" value="true"/>
+        
+        <!--  Sets failure detection timeout to use in discoverySpi and communicationSpi. -->
+        <property name="failureDetectionTimeout" value="10000"/>
+        
+        <!-- Sets flag indicating whether the cluster is enabled to activate automatically 
+             after all nodes joined of the pre-defined baseline topology.
+             This value should be the same on all nodes in the cluster. -->
+        <property name="autoActivationEnabled" value="true"/>
+        
+        <!-- As default, it creates a unique id for the node by generating a UUID. 
+             It is used part of the persistent storage folder path. 
+             E. g. persistent storage folder /opt/jobcase/db/node00-49755452-fa53-41d4-82d3-cfff0b830a57.
+             
+             It is recommend to set the consistent id from the outside instead using generated value.
+             <property name="setConsistentId" value=""/>
+         -->
+
+        <!-- Enabling Apache Ignite native persistence.
+             Details https://apacheignite.readme.io/docs/distributed-persistent-store. 
+          -->
+        <property name="dataStorageConfiguration">
+            <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+                <property name="defaultDataRegionConfiguration">
+                    <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+                        <property name="persistenceEnabled" value="true"/>
+                        
+                        <!-- Increasing the buffer size to 1 GB. -->
+                        <property name="checkpointPageBufferSize" value="#{1024L * 1024 * 1024}"/>
+                        
+                        <property name="name" value="Default_Region"/>
+                        
+                        <!-- Setting the size of the default region to 2GB. -->
+                        <property name="maxSize" value="#{2L * 1024 * 1024 * 1024}"/>                        
+                    </bean>
+                </property>
+                
+                <!-- Set the page size to 4 KB -->
+                <property name="pageSize" value="4096"/>
+                                
+                <!-- Path to the root directory where the Persistent Store will persist data and indexes.                      
+                  -->
+                <!-- <property name="storagePath" value="${IGNITE_PERSISTANT_STORE}"/> -->
+                <property name="storagePath" value="/opt/jobcase/db"/>
+                
+                <!-- Sets a path to the directory where WAL is stored. -->                
+                <property name="walPath" value="/opt/jobcase/db/wal"/>
+                
+                <!-- Sets a path for the WAL archive directory. 
+                     Every WAL segment will be fully copied to this directory 
+                     before it can be reused for WAL purposes. -->                
+                <property name="walArchivePath" value="/opt/jobcase/db/wal/archive"/>
+            </bean>
+       </property>
+       
+       <!--  Explicitly configure JDBC connector communication -->
+       <property name="clientConnectorConfiguration">
+            <bean class="org.apache.ignite.configuration.ClientConnectorConfiguration">
+                <property name="port" value="10800"/>
+                <property name="portRange" value="1"/>
+            </bean>
+       </property>
+       
+       <!--  Explicitly configure TCP connector communication -->
+       <property name="connectorConfiguration">
+            <bean class="org.apache.ignite.configuration.ConnectorConfiguration">
+                <!-- Binary Client Protocol port -->
+                <property name="port" value="11211"/>
+                <property name="portRange" value="1"/>
+                
+                <!-- Path to Jetty configuration file (REST API configuration).  -->
+                <property name="jettyPath" value="/opt/jobcase/config/jetty-config.xml"/>
+            </bean>
+       </property>
+              
+       <!--  Explicitly configure TCP server communication -->
+       <property name="communicationSpi">
+            <bean class="org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi">
+                <property name="localPort" value="47100"/>
+                <property name="localPortRange" value="1"/>
+                <!-- Maintain connection for outgoing and incoming messages separately. 
+                     Default is false. -->
+                <property name="usePairedConnections" value="false"/>
+            </bean>
+       </property>
+       
+        <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
+        <property name="discoverySpi">
+            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+                <property name="localPort" value="47500"/>
+                <property name="localPortRange" value="1"/>
+                <property name="ipFinder">
+                    <!-- local FS discovery using a common mounted volume -->
+                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.sharedfs.TcpDiscoverySharedFsIpFinder">
+                        <property name="path" value="/opt/jobcase/discovery"/>
+                    </bean>
+                    
+                    <!-- S3 bucket approach for discovery of cluster nodes
+                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.s3.TcpDiscoveryS3IpFinder">
+                        <property name="bucketName" value="staging-mlstore-ignite-discovery-01"/>
+                        Ideally we would use awsCredentialsProvider here, and use the CredentialsProviderChain below
+                             but Ignite comes with an old AWS library that does not include the latter
+                        <property name="awsCredentials" ref="aws.creds"/>
+                        <property name="clientConfiguration">
+                            <bean class="com.amazonaws.ClientConfiguration">
+                                the default is 3, and in test we had issues where this was not enough to reliably start an instance
+                                     The S3 SLA talks about error rate per 5 minute period.  Circumstantial evidence points to 20s/try timeout
+                                <property name="maxErrorRetry" value="20"/>
+                            </bean>
+                        </property>
+                    </bean> -->
+                </property>
+            </bean>
+        </property>
+    </bean>
+    
+    <!-- The S3 buckets used allow access to Ignite nodes themselves, so we don't need additional credentials.
+         This will use anonymous credentials if no credentials are found -->
+    <bean id="aws.creds" class="com.amazonaws.auth.AnonymousAWSCredentials"/>    
+</beans>
