@@ -433,9 +433,6 @@ Add addressResolver to `<property name="communicationSpi">`. And update the ip-a
 Launch the docker container with port mapping for discovery- and communication ports.
 E. g. `-p 47100:47100 -p 47500:47500`.
 
-
-
-
 #### Xterm Display
 
 TODO

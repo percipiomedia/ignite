@@ -17,6 +17,9 @@
   limitations under the License.
 -->
 
+<!--
+  Jobcase log configuration for Apache Ignite.
+ -->
 <Configuration>
     <Appenders>
         <Console name="CONSOLE" target="SYSTEM_OUT">

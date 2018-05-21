@@ -14,11 +14,6 @@
 #        |- libs
 #        |- config
 #
-# TODO:
-#  - Check if grid is active. If it is not active it will call control.sh --activate./ 
-#  - Make sure all Ignite log output is written to STDOUT/STDERR. 
-#    By default, docker logs shows the command’s STDOUT and STDERR. 
-#
 
 # Start from a Java image.
 FROM openjdk:8

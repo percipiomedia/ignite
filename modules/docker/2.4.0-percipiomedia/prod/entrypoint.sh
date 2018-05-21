@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-# Startup controller script for Percipiomedia Apache Ignite containers
+# Startup controller script for Jobcase Apache Ignite containers
 
 source ./util.sh
 

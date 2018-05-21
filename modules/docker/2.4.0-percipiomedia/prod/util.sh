@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-# Common shell functions for Percipiomedia Apache Ignite containers
+# Common shell functions for Jobcase Apache Ignite containers
 
 LOG_DATE='date +%Y/%m/%d:%H:%M:%S'
 LOG_FILE=${JOBCASE_LOGS}/entrypoint.log
