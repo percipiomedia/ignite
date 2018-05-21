@@ -46,8 +46,8 @@ ENV IGNITE_REST_PORT 8080
 # verbose mode in Ignite
 ENV IGNITE_QUIET false
 
-# Ignite cluster definition file
-ENV CONFIG_URI ${JOBCASE_CONFIG}/default.node.config.xml
+# Default Ignite cluster definition file
+ENV CONFIG_URI ${JOBCASE_CONFIG}/multicast.discovery.node.config.xml
 
 # root directory where Ignite will persist data, indexes and so on
 ENV IGNITE_PERSISTANT_STORE ${JOBCASE_HOME}/db
@@ -58,8 +58,14 @@ ENV IGNITE_DISCOVERY /opt/jobcase/discovery
 # Ignite home
 ENV IGNITE_HOME ${JOBCASE_HOME}/apache-ignite-fabric
 
+# Initial and maximum JVM Heap size
+ENV JVM_HEAP_SIZE 1g
+
+# JVM maximum amount of native memory that can be allocated for class metadata 
+ENV JVM_METASPACE_SIZE 1g
+
 # Ignite JVM settings
-ENV JVM_OPTS "-Xms1g -Xmx1g -server -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC"
+ENV JVM_OPTS="-XX:MaxMetaspaceSize=${JVM_METASPACE_SIZE} -server -Xms${JVM_HEAP_SIZE} -Xmx${JVM_HEAP_SIZE} -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M -Xloggc:${JOBCASE_LOGS}/jvm-gc.log"
 
 # Do not rely on anything provided by base image(s), but be explicit, if they are installed already it is noop then
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -71,8 +77,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy apache ignite binaries
 COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin ${IGNITE_HOME}/
 
+# Enable log4j2
+COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-log4j2 ${IGNITE_HOME}/libs/ignite-log4j2/
+
 # Enable HTTP REST client
 COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-rest-http ${IGNITE_HOME}/libs/ignite-rest-http/
+
+# Enable AWS support
+COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-aws ${IGNITE_HOME}/libs/ignite-aws/
+
+# Copy log4j2 configuration file
+COPY ./ignite-log4j2.xml ${JOBCASE_CONFIG}/
 
 # Copy REST client configuration file
 COPY ./jetty-config.xml ${JOBCASE_CONFIG}/
@@ -87,7 +102,7 @@ COPY ./file.discovery.node.config.xml ${JOBCASE_CONFIG}/
 COPY ./s3bucket.discovery.node.config.xml ${JOBCASE_CONFIG}/
 
 # Copy default grid configuration file
-COPY ./default.node.config.xml ${JOBCASE_CONFIG}/
+COPY ./multicast.discovery.node.config.xml ${JOBCASE_CONFIG}/
 
 # Copy sh files and set permission
 COPY ./run.sh ${IGNITE_HOME}/

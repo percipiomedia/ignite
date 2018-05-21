@@ -31,9 +31,12 @@
  -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="
        http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans.xsd">
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd">
 
    <bean abstract="true" id="grid.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
         <!-- Set to true to enable distributed class loading, default is false. -->
@@ -123,5 +126,53 @@
                 <property name="usePairedConnections" value="false"/>
             </bean>
        </property>
+       
+       <!-- Enable cache events. -->
+       <property name="includeEventTypes">
+          <list>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CHECKPOINT_SAVED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_REBALANCE_STARTED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_REBALANCE_STOPPED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_REBALANCE_PART_LOADED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_REBALANCE_PART_UNLOADED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_JOB_TIMEDOUT"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_JOB_FAILED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_JOB_FAILED_OVER"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_JOB_REJECTED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_JOB_CANCELLED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_TASK_TIMEDOUT"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_TASK_FAILED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CLASS_DEPLOY_FAILED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_TASK_DEPLOY_FAILED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_TASK_DEPLOYED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_TASK_UNDEPLOYED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_REBALANCE_STARTED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_REBALANCE_STOPPED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_NODE_JOINED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_NODE_LEFT"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_NODE_FAILED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_NODE_SEGMENTED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CLIENT_NODE_DISCONNECTED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CLIENT_NODE_RECONNECTED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CLASS_DEPLOYED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CLASS_UNDEPLOYED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CLASS_DEPLOY_FAILED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_TASK_DEPLOYED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_TASK_UNDEPLOYED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_TASK_DEPLOY_FAILED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_STARTED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_STOPPED"/>
+            <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_NODES_LEFT"/>
+          </list>
+       </property>       
+       
+        <!--
+            Logger to use.
+        -->
+        <property name="gridLogger">
+            <bean class="org.apache.ignite.logger.log4j2.Log4J2Logger">
+                <constructor-arg type="java.lang.String" value="#{systemEnvironment['JOBCASE_CONFIG']}/ignite-log4j2.xml"/>
+            </bean>
+        </property>
    </bean>
 </beans>

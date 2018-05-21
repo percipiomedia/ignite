@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+       
+    <import resource="common.node.config.xml"/>
+       
+    <!--
+        Alter configuration below as needed.
+    -->
+    <bean parent="grid.cfg">
+        <!-- Explicitly configure TCP discovery SPI to provide list of initial nodes. -->
+        <property name="discoverySpi">
+            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+                <property name="localPort" value="#{systemEnvironment['IGNITE_DISCOVERY_PORT']}"/>
+                <property name="localPortRange" value="1"/>
+                
+                <!-- Multicast Based Discovery
+                     Multicast to discover other nodes in the grid and is the default IP finder. 
+                     Details: https://apacheignite.readme.io/docs/cluster-config#multicast-based-discovery
+                 -->
+            </bean>
+        </property>              
+    </bean>
+</beans>
