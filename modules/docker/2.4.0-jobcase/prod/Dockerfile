@@ -1,5 +1,9 @@
 # Base image for Jobcase Apache Ignite
 
+#
+# The image layout keeps same type of information in dedicated top-level directories. 
+# E. g. all configuration information is in '/opt/jobcase/config'.
+#
 # Docker image layout:
 #  |
 #  - /opt/jobcase
@@ -7,12 +11,12 @@
 #     | entrypoint.sh
 #     |- logs
 #     |- config
+#     |- data
 #     |- apache-ignite-fabric
 #        |
 #        | run.sh
 #        |- bin
 #        |- libs
-#        |- config
 #
 
 # Start from a Java image.
@@ -24,10 +28,15 @@ ENV IGNITE_VERSION 2.4.0
 # JobCase home
 ENV JOBCASE_HOME /opt/jobcase
 
-# Location of configuration files
+# Location of configuration files.
+# # It includes logging configuration file
+# and Apache Ignite grid configuration files 
+# for common deployment scenarios. 
 ENV JOBCASE_CONFIG ${JOBCASE_HOME}/config
 
-# Location of container log files
+# Location of container log files.
+# It includes the entrypoint-, Apache Ignite- 
+# and GC log files.
 ENV JOBCASE_LOGS ${JOBCASE_HOME}/logs
 
 # Ports
@@ -45,12 +54,16 @@ ENV IGNITE_QUIET false
 ENV CONFIG_URI ${JOBCASE_CONFIG}/multicast.discovery.node.config.xml
 
 # root directory where Ignite will persist data, indexes and so on
-ENV IGNITE_PERSISTANT_STORE ${JOBCASE_HOME}/db
+ENV IGNITE_PERSISTANT_STORE ${JOBCASE_HOME}/data
 
-# ip dicovery volume
-ENV IGNITE_DISCOVERY /opt/jobcase/discovery
+# ip dicovery volume for Shared File System Based Discovery
+ENV IGNITE_DISCOVERY_FS ${JOBCASE_HOME}/discovery
+
+# Amazon AWS S3 discovery bucket name
+ENV IGNITE_DISCOVERY_S3_BUCKETNAME staging-mlstore-ignite-discovery-01
 
 # Ignite home
+# It includes the Apache Ignite startup script and binaries. 
 ENV IGNITE_HOME ${JOBCASE_HOME}/apache-ignite-fabric
 
 # Initial and maximum JVM Heap size

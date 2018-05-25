@@ -17,6 +17,11 @@
   limitations under the License.
 -->
 
+<!--
+  The file defines the Apache Ignite REST API connector.
+  
+  Details https://apacheignite.readme.io/docs/rest-api. 
+ -->
 <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
 <Configure id="Server" class="org.eclipse.jetty.server.Server">
     <Arg name="threadPool">

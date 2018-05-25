@@ -21,7 +21,7 @@
   The common.node.config.xml grid configuration file defines settings 
   which are used across different type of deployments.
   
-  It is abstract and cannot be directly used as Ignite configurartion file.
+  It is abstract and cannot be directly used as Ignite configuration file.
   
   The file (Spring application) makes use of environment variable expansion.
   It is using Spring EL syntax like #{systemEnvironment['IGNITE_PERSISTANT_STORE']}.
@@ -50,11 +50,11 @@
              This value should be the same on all nodes in the cluster. -->
         <property name="autoActivationEnabled" value="true"/>
         
-        <!-- As default, it creates a unique id for the node by generating a UUID. 
+        <!-- As default, Ignite creates a unique id for the node by generating a UUID. 
              It is used part of the persistent storage folder path. 
              E. g. persistent storage folder /opt/jobcase/db/node00-49755452-fa53-41d4-82d3-cfff0b830a57.
              
-             It is recommend to set the consistent id from the outside instead using generated value.
+             It is recommended that the consistent id is set from the outside instead using generated value.
              <property name="setConsistentId" value=""/>
          -->
 

@@ -17,6 +17,15 @@
   limitations under the License.
 -->
 
+<!-- 
+  The s3bucket.discovery.node.config.xml grid configuration file 
+  defines Amazon S3 Node Discovery. 
+  See https://apacheignite-mix.readme.io/docs/amazon-aws#amazon-s3-based-discovery.
+
+  When specifying -e "CONFIG_URI=${JOBCASE_CONFIG}/s3bucket.discovery.node.config.xml" 
+  in the docker run command
+  it will use s3bucket.discovery.node.config.xml as grid configuration file.
+ -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="
@@ -37,7 +46,7 @@
                 <property name="ipFinder">
                     <!-- S3 bucket approach for discovery of cluster nodes -->
                     <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.s3.TcpDiscoveryS3IpFinder">
-                        <property name="bucketName" value="staging-mlstore-ignite-discovery-01"/>
+                        <property name="bucketName" value="#{systemEnvironment['IGNITE_DISCOVERY_S3_BUCKETNAME']}"/>
                         <!-- Ideally we would use awsCredentialsProvider here, and use the CredentialsProviderChain below
                              but Ignite comes with an old AWS library that does not include the latter -->
                         <property name="awsCredentials" ref="aws.creds"/>

@@ -17,11 +17,21 @@
   limitations under the License.
 -->
 
+<!-- 
+  The mulitcast.discovery.mode.config.xml grid configuration file
+  defines the default node discovery in Apache Ignite.
+  
+  If the grid configuration file does not specify the property ipFinder 
+  it will use multicast for node discovery.  
+ -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="
        http://www.springframework.org/schema/beans
-       http://www.springframework.org/schema/beans/spring-beans.xsd">
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util.xsd">
        
     <import resource="common.node.config.xml"/>
        
@@ -36,7 +46,7 @@
                 <property name="localPortRange" value="1"/>
                 
                 <!-- Multicast Based Discovery
-                     Multicast to discover other nodes in the grid and is the default IP finder. 
+                     Multicast to discover other nodes in the grid and it is the default IP finder. 
                      Details: https://apacheignite.readme.io/docs/cluster-config#multicast-based-discovery
                  -->
             </bean>
