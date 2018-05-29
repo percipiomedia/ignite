@@ -55,8 +55,8 @@
              E. g. persistent storage folder /opt/jobcase/db/node00-49755452-fa53-41d4-82d3-cfff0b830a57.
              
              It is recommended that the consistent id is set from the outside instead using generated value.
-             <property name="setConsistentId" value=""/>
          -->
+        <property name="consistentId" value="#{systemEnvironment['IGNITE_CONSISTENT_ID']}"/>
 
         <!-- Enabling Apache Ignite native persistence.
              Details https://apacheignite.readme.io/docs/distributed-persistent-store. 

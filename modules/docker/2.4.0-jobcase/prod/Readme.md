@@ -264,22 +264,30 @@ Start container using S3 bucket node discovery:
 
 The grid configuration file(s) enable native persistence.  Apache Ignite stores a superset of data on disk, and as much as it can in RAM based on the capacity of the latter. 
 
-The persistence storage folder is located under `/opt/jobcase/db`. A data region called `Default_Region` is created with `[initSize=256.0 MiB, maxSize=2.0 GiB, persistenceEnabled=true]`.
+The persistence storage folder is located under `/opt/jobcase/data`. A data region called `Default_Region` is created with `[initSize=256.0 MiB, maxSize=2.0 GiB, persistenceEnabled=true]`.
 
-At the moment, our grid configuration creates a unique id for the node by generating a UUID. And it is using the UUID to create a subdirectory under `/opt/jobcase/db`. In the subdirectory Apache Ignite persist the data for the node.
+As default, our grid configuration creates a unique id for the node by generating a UUID. And it is using the UUID to create a subdirectory under `/opt/jobcase/data`. In the subdirectory Apache Ignite persist the data for the node.
 
 ~~~~
         <!-- As default, it creates a unique id for the node by generating a UUID. 
              It is used part of the persistent storage folder path. 
              E. g. persistent storage folder /opt/jobcase/db/node00-49755452-fa53-41d4-82d3-cfff0b830a57.
              
-             It is recommend to set the consistent id from the outside instead using generated value.
-             <property name="setConsistentId" value=""/>
+             It is recommended that the consistent id is set from the outside instead using generated value.
          -->
+        <property name="consistentId" value="#{systemEnvironment['IGNITE_CONSISTENT_ID']}"/>
 ~~~~
 
 Quote from Apache Ignite documentation [link][5]:
 >To make sure a node gets assigned for a specific subdirectory and, thus, for specific data partitions even after restarts, set IgniteConfiguration.setConsistentId to a unique value cluster-wide. The consistent ID is mapped to UUID from node{IDX}-{UUID} string.
+
+When starting the container, we can define a distinct consistent id value by passing an environment variable:
+
+~~~~
+    -e "IGNITE_CONSISTENT_ID=<mine_id_value>"
+~~~~
+
+
 
 ### JVM Garbage Collection
 
