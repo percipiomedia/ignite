@@ -385,6 +385,16 @@
                                             <substitution expression="ignite.build=${ignite.build}" />
                                         </replaceregexp>
                                     </target>
+                                    
+                                    <!-- called mvn -Drelease.version=2.4.0 -->
+                                    <target if="release.version">
+                                        <property name="props.file" value="../../modules/core/target/classes/ignite.properties" />
+                                        
+                                        <replaceregexp file="${props.file}" byline="true">
+                                            <regexp pattern="ignite.version=.*" />
+                                            <substitution expression="ignite.version=${release.version}" />
+                                        </replaceregexp>
+                                    </target>                                    
                                 </configuration>
                             </execution>
                         </executions>
