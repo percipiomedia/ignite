@@ -1,0 +1,33 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <org.jenkinsci.plugins.sharedworkspace.SharedWorkspace plugin="shared-workspace@1.0.2">
+      <name>NONE</name>
+    </org.jenkinsci.plugins.sharedworkspace.SharedWorkspace>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode>docker</assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <jdk>(System)</jdk>
+  <triggers>
+    <hudson.triggers.TimerTrigger>
+      <spec>@daily</spec>
+    </hudson.triggers.TimerTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <org.jenkinsci.plugins.DependencyCheck.DependencyCheckUpdateOnlyBuilder plugin="dependency-check-jenkins-plugin@3.2.1">
+      <skipOnScmChange>false</skipOnScmChange>
+      <skipOnUpstreamChange>false</skipOnUpstreamChange>
+      <datadir>/home/ec2-user/OWASP-DP/NVDUpdates</datadir>
+    </org.jenkinsci.plugins.DependencyCheck.DependencyCheckUpdateOnlyBuilder>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>
