@@ -52,6 +52,11 @@ pipeline {
                 build(&quot;BuildIgniteDockerImage-2.4&quot;)
             }
         }
+        stage(&quot;Validate Docker Container&quot;) {
+            steps {
+                build(&quot;ValidateIgniteDockerContainer-2.4&quot;)
+            }
+        }        
         stage(&quot;Publish Docker Image&quot;) {
             steps {
                 build(&quot;PushIgniteDockerImage-2.4&quot;)
