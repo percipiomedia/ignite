@@ -24,7 +24,7 @@
     <org.jfrog.hudson.maven3.Maven3Builder plugin="artifactory@2.14.0">
       <mavenName>Maven 3.3.9</mavenName>
       <rootPom>modules/core/pom.xml</rootPom>
-      <goals>clean test -DskipTests=false -Dtest=org.apache.ignite.testsuites.IgniteBasicTestSuite</goals>
+      <goals>clean test -DskipTests=false &quot;-Dtest=org.apache.ignite.testsuites.IgniteBasicTestSuite, !*GridToStringBuilderSelfTest#testToStringCheckAdvancedRecursionPrevention&quot;</goals>
       <mavenOpts>-DUSER_LIBS=${USER_LIBS}</mavenOpts>
     </org.jfrog.hudson.maven3.Maven3Builder>
   </builders>
