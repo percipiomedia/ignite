@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.apache.ignite.IgniteLogger;
 import org.apache.ignite.cluster.ClusterNode;
 import org.apache.ignite.configuration.DeploymentMode;
 import org.apache.ignite.internal.GridKernalContext;
+import org.apache.ignite.internal.cluster.IgniteClusterEx;
 import org.apache.ignite.internal.util.GridBoundedLinkedHashSet;
 import org.apache.ignite.internal.util.GridByteArrayList;
 import org.apache.ignite.internal.util.tostring.GridToStringExclude;
@@ -245,6 +247,20 @@ class GridDeploymentClassLoader extends ClassLoader implements GridDeploymentInf
         this.p2pExclude = p2pExclude;
 
         nodeList = new LinkedList<>(participants.keySet());
+        
+        // Sort the node list such that all clients nodes come before all server nodes. 
+        // TODO: This is a workaround for server-to-server resource lookups to failing
+        // prematurely and should be removed when the issue is addressed.        
+        final IgniteClusterEx igniteClusterEx = this.ctx.grid().cluster();
+        Collections.sort(nodeList, new Comparator<UUID>() {
+           @Override
+           public int compare(UUID o1, UUID o2) {
+              final boolean isClient1 = igniteClusterEx.node(o1).isClient();
+              final boolean isClient2 = igniteClusterEx.node(o2).isClient();
+              if (isClient1 == isClient2) return 0;
+              return isClient1 ? -1 : 1;
+           }
+        });
 
         nodeLdrMap = new HashMap<>(participants);
 
@@ -316,6 +332,20 @@ class GridDeploymentClassLoader extends ClassLoader implements GridDeploymentInf
 
             // 2. Add passed in node to the first position.
             nodeList.addFirst(nodeId);
+
+            // Sort the node list such that all clients nodes come before all server nodes. 
+            // TODO: This is a workaround for server-to-server resource lookups to failing
+            // prematurely and should be removed when the issue is addressed.
+            final IgniteClusterEx igniteClusterEx = this.ctx.grid().cluster();
+            Collections.sort(nodeList, new Comparator<UUID>() {
+               @Override
+               public int compare(UUID o1, UUID o2) {
+                  final boolean isClient1 = igniteClusterEx.node(o1).isClient();
+                  final boolean isClient2 = igniteClusterEx.node(o2).isClient();
+                  if (isClient1 == isClient2) return 0;
+                  return isClient1 ? -1 : 1;
+               }
+            });
 
             // 3. Put to map.
             nodeLdrMap.put(nodeId, ldrId);

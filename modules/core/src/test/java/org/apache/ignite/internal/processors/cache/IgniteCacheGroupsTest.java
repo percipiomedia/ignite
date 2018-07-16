@@ -67,6 +67,7 @@ import org.apache.ignite.cache.affinity.Affinity;
 import org.apache.ignite.cache.affinity.AffinityKeyMapper;
 import org.apache.ignite.cache.affinity.rendezvous.RendezvousAffinityFunction;
 import org.apache.ignite.cache.query.ContinuousQuery;
+import org.apache.ignite.cache.query.Query;
 import org.apache.ignite.cache.query.QueryCursor;
 import org.apache.ignite.cache.query.ScanQuery;
 import org.apache.ignite.cache.store.CacheStore;
@@ -582,8 +583,8 @@ public class IgniteCacheGroupsTest extends GridCommonAbstractTest {
             }
         };
 
-        QueryCursor qry1 = ignite(loc ? 0 : 2).cache(CACHE1).query(new ContinuousQuery<>().setLocalListener(lsnr1));
-        QueryCursor qry2 = ignite(loc ? 0 : 3).cache(CACHE2).query(new ContinuousQuery<>().setLocalListener(lsnr2));
+        QueryCursor qry1 = ignite(loc ? 0 : 2).cache(CACHE1).query((Query<?>)new ContinuousQuery<>().setLocalListener(lsnr1));
+        QueryCursor qry2 = ignite(loc ? 0 : 3).cache(CACHE2).query((Query<?>)new ContinuousQuery<>().setLocalListener(lsnr2));
 
         if (atomicityMode == TRANSACTIONAL) {
             Ignite ignite = ignite(loc ? 0 : 1);
