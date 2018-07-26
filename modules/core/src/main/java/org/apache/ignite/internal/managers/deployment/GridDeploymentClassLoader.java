@@ -18,10 +18,16 @@
 package org.apache.ignite.internal.managers.deployment;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -677,7 +683,78 @@ class GridDeploymentClassLoader extends ClassLoader implements GridDeploymentInf
         throw new ClassNotFoundException("Failed to peer load class [class=" + name + ", nodeClsLdrs=" +
             nodeLdrMapCp + ", parentClsLoader=" + getParent() + ']', err);
     }
+    
+    /** {@inheritDoc} */
+    @Nullable @Override protected URL findResource(String name) {
+        final InputStream inputStream = this.getResourceAsStream(name);
+        if (inputStream == null) return null;         
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            log.error("TODO", e);
+            return null;
+        }
+        
+        try {
+            return new URL("grid", this.id.toString(), -1, name, 
+                new GridDeploymentURLStreamHandler(this.ctx.deploy()));
+        } catch (MalformedURLException e) {
+            throw new AssertionError(e);   
+        }
+    }
+    
+    /** {@inheritDoc} */
+    @Nullable @Override protected Enumeration<URL> findResources(String name) {
+        final URL url = this.findResource(name);
+        return url == null
+            ? Collections.emptyEnumeration()
+            : Collections.enumeration(Collections.singleton(url));
+    }
 
+   private static class GridDeploymentURLStreamHandler extends URLStreamHandler {
+       
+        public GridDeploymentURLStreamHandler(GridDeploymentManager gridDeploymentManager) {
+            this.gridDeploymentManager = gridDeploymentManager;
+        }
+        
+        /** {@inheritDoc} */
+        @Override protected URLConnection openConnection(URL url) throws IOException {
+            return new URLConnection (url) {
+
+                /** {@inheritDoc} */
+                @Override public void connect() throws IOException {
+                    if (this.connected) return;
+                    
+                    final URL url = getURL();
+                    
+                    IgniteUuid classLoaderId = IgniteUuid.fromString(url.getHost());
+                    String resourceName = url.getPath();
+
+                    GridDeployment deployment = gridDeploymentManager.getDeployment(classLoaderId);
+                    if (deployment != null) {
+                        inputStream = deployment.classLoader().getResourceAsStream(resourceName);
+                        if (inputStream == null) {
+                            throw new IOException("TODO");
+                        }
+                        connected = true;
+                    }                   
+                }
+                
+                /** {@inheritDoc} */
+                @Override public InputStream getInputStream() throws IOException {
+                    if (!connected) {
+                        connect();
+                    }                    
+                    return inputStream;
+                }
+                
+                private InputStream inputStream;
+            };
+        }
+        
+        private final GridDeploymentManager gridDeploymentManager;
+    }
+    
     /** {@inheritDoc} */
     @Nullable @Override public InputStream getResourceAsStream(String name) {
         assert !Thread.holdsLock(mux);
