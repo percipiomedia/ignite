@@ -33,12 +33,44 @@ if [ ! -z "$EXTERNAL_LIBS" ]; then
   done
 fi
 
+# Load docker host information
+# automatically export all variables in host.info
+if [ -e "$IGNITE_PERSISTENT_STORE/host.info" ]; then
+  set -a
+  source $IGNITE_PERSISTENT_STORE/host.info
+  set +a
+fi
+
 # form a consistent ID from the ECS host's name and the cluster name
 if [ -z "$IGNITE_CONSISTENT_ID" ]; then
-    if [ ! -z "$IGNITE_CLUSTER_NAME" ]  && [ ! -z "$IGNITE_PERSISTENT_STORE" ]  &&  [ -f "$IGNITE_PERSISTENT_STORE/hostname" ]; then
-        HOST_NAME=`cat $IGNITE_PERSISTENT_STORE/hostname`
-        export IGNITE_CONSISTENT_ID=${IGNITE_CLUSTER_NAME}-${HOST_NAME}
+    if [ -z $IGNITE_CONSISTENT_ID_PREFIX ]; then
+         IGNITE_CONSISTENT_ID_PREFIX=${IGNITE_CLUSTER_NAME}
     fi
+    if [ ! -z "$IGNITE_CONSISTENT_ID_PREFIX" ] ; then
+        EXIST=()
+        if [ ! -z "$IGNITE_PERSISTENT_STORE" ] ; then
+            EXIST=( `cd ${IGNITE_PERSISTENT_STORE}/store; ls -d ${IGNITE_CONSISTENT_ID_PREFIX}_* 2>/dev/null` )
+        fi
+
+        if [ ${#EXIST[@]} -eq 1 ] ; then
+            export IGNITE_CONSISTENT_ID=$EXIST
+
+            # Ugly hack:   Ignite seems to convert all "-" to "_" when creating directories.
+            #   Assume that all "_" should be "-"
+            export IGNITE_CONSISTENT_ID=`echo $IGNITE_CONSISTENT_ID | tr '_' '-'`
+        elif [ ${#EXIST[@]} -eq 0 ]; then
+            export IGNITE_CONSISTENT_ID=${IGNITE_CLUSTER_NAME}-`cat /proc/sys/kernel/random/uuid`
+        else
+            echo "Cannnot select  IGNITE_CONSISTENT_ID from ${EXIST[@]}, leaving unset"
+        fi
+    fi
+fi
+
+# Datadog seems to require that java.rmi.server.hostname be set.
+# There is confusion as to what happens if the datadog container is using a different network mode.
+if [ ! -z $IGNITE_JMX_PORT ]; then
+    HOST_IP=`hostname -i`
+    export JVM_DEBUG_OPTS="-Djava.rmi.server.hostname=${HOST_IP} $JVM_DEBUG_OPTS"
 fi
 
 export JVM_OPTS="$JVM_OPTS $JVM_DEBUG_OPTS $JVM_ADDITIONAL_OPTS"
@@ -61,7 +93,7 @@ if [ "$IGNITE_QUIET" = "false" ]; then
   QUIET="-v"
 fi
 
-# If IGNITE_AUTO_BASELINE_DELAY is specifed, spawn a separate background task to force activate 
+# If IGNITE_AUTO_BASELINE_DELAY is specifed, spawn a separate background task to force activate
 # the cluster if the current node is not part of the baseline after the delay.   The delay
 # needs to be shorter than the health check startup time.
 if [ ! -z "$IGNITE_CONSISTENT_ID" ]  && [ "$IGNITE_AUTO_BASELINE_DELAY" -ne 0 ]; then

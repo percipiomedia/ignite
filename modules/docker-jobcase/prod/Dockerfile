@@ -50,7 +50,7 @@ ENV JOBCASE_LOGS ${JOBCASE_HOME}/logs
 
 # Ports
 ENV IGNITE_SERVER_PORT 11211
-ENV IGNITE_JMX_PORT 49112
+ENV IGNITE_JMX_PORT 9000
 ENV IGNITE_DISCOVERY_PORT 47500
 ENV IGNITE_COMMUNICATION_PORT 47100
 ENV IGNITE_JDBC_PORT 10800
@@ -92,8 +92,8 @@ ENV JVM_DEBUG_PORT 1044
 # other things to pass to JVM without needing to restate default values.
 ENV JVM_ADDITIONAL_OPTS ""
 
-# Ignite common JVM settings.   Run.sh will concatenate the above settings.
-ENV JVM_OPTS="-server -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC"
+# Ignite common JVM settings.   Run.sh will concatenate the JVM_ settings.
+ENV JVM_OPTS="-server -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC -Djava.net.preferIPv4Stack=true"
 
 # GC logging is only for Ignite itself, not utilities like Visor or control.sh
 ENV JVM_IGNITE_GC_LOGGING_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M"
@@ -157,13 +157,14 @@ COPY ./common.node.config.xml ${JOBCASE_CONFIG}/
 COPY ./file.discovery.node.config.xml ${JOBCASE_CONFIG}/
 
 # Copy s3 bucket discovery grid configuration file
-COPY ./s3bucket.discovery.node.config.xml ${JOBCASE_CONFIG}/
+COPY ./s3bucket.discovery.node.config.xml ${JOBCASE_CONFIG}/    
 
 # Copy default grid configuration file
 COPY ./multicast.discovery.node.config.xml ${JOBCASE_CONFIG}/
 
 # Copy sh files and set permission
 COPY ./run.sh ${IGNITE_HOME}/
+COPY ./visor.sh ${IGNITE_HOME}/
 COPY ./autobaseline.sh ${IGNITE_HOME}/
 
 RUN chmod +x ${IGNITE_HOME}/run.sh
