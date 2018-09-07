@@ -52,12 +52,7 @@ public class ClusterNodeAttributeAffinityBackupFilterSelfTest extends AffinityFu
     
     /** {@inheritDoc} */
     @Override
-   protected Map<String, Integer>   checkPartitionsWithAffinityBackupFilterExpectedPerGroup() {
-       Map<String, Integer> map = new HashMap<String,Integer>();
-       
-       map.put(FIRST_NODE_GROUP, 1);
-       map.put("B", 1);
-       map.put("C", 1);
-       return map;
+    protected int expectedNodesForEachPartition() {
+       return 3;
     }
 }
