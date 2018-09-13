@@ -1414,10 +1414,6 @@ public class DataStreamerImpl<K, V> implements IgniteDataStreamer<K, V>, Delayed
             perNodeParallelOps = parallelOps != 0 ? parallelOps :
                 streamerPoolSize * IgniteDataStreamer.DFLT_PARALLEL_OPS_MULTIPLIER;
 
-            if (log.isDebugEnabled()) {
-            	log.debug(String.format("%s perNodeParallelOps [%d]", this.getClass().getName(), perNodeParallelOps));
-            }
-
             sem = new Semaphore(perNodeParallelOps);
 
             stripes = (PerStripeBuffer[])Array.newInstance(PerStripeBuffer.class, streamerPoolSize);
