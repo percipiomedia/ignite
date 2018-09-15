@@ -490,18 +490,20 @@ public class GridDeploymentManager extends GridManagerAdapter<DeploymentSpi> {
 
                     return locDep;
                 }
+            } else {
+	            // If the class excluded from peer class loading,
+	            // we always want to use the local deployment.
+	            if (log.isDebugEnabled()) {
+	            	log.debug(MessageFormat.format(
+	            			"Reusing local deployment for SHARED or CONTINUOUS mode [{0}] reuse [{1}]",
+	            			depMode,
+	            			reuse));
+	            }
+
+	            return locStore.getDeployment(meta);
             }
 
-            // If the class excluded from peer class loading,
-            // we always want to use the local deployment.
-            if (log.isDebugEnabled()) {
-            	log.debug(MessageFormat.format(
-            			"Reusing local deployment for SHARED or CONTINUOUS mode [{0}] reuse [{1}]",
-            			depMode,
-            			reuse));
-            }
-
-            return locStore.getDeployment(meta);
+            return verStore.getDeployment(meta);
         }
 
         // Private or Isolated mode.
