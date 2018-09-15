@@ -17,7 +17,6 @@
 
 package org.apache.ignite.internal.managers.deployment;
 
-import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -429,6 +428,14 @@ public class GridDeploymentManager extends GridManagerAdapter<DeploymentSpi> {
             return locStore.getDeployment(meta);
         }
 
+        // Disclaimer: There is a lack of supporting resources which are locally deployed
+        // and referenced in resources deployed in SHARED or CONTINUOUS mode.
+        // Apache Ignite does not use peer class loading in the areas of plugins and service grid.
+        // If an Apache Ignite node/client uses these areas and areas with peer class loading
+        // common resources will have different user versions.
+        // Any local deployed resource has the user version 0.
+        // The same resource deployed in SHARED or CONTINUOUS mode will have a user version as defined in ingite.xml.
+
         // In shared mode, if class is locally available, we never load
         // from remote node simply because the class loader needs to be "shared".
         if (isPerVersionMode(meta.deploymentMode())) {
@@ -490,28 +497,6 @@ public class GridDeploymentManager extends GridManagerAdapter<DeploymentSpi> {
 
                     return locDep;
                 }
-            } else {
-	            // If the class excluded from peer class loading,
-	            // we always want to include the local deployment too.
-	            if (log.isDebugEnabled()) {
-	            	log.debug(MessageFormat.format(
-	            			"Reusing SHARED or CONTINUOUS deployment over LOCAL mode [{0}]",
-	            			depMode));
-	            }
-
-	            GridDeployment verDep = verStore.getDeployment(meta);
-
-	            if(verDep == null) {
-		            GridDeployment locDep = locStore.getDeployment(meta);
-
-		            if (log.isDebugEnabled()) {
-		            	log.debug(MessageFormat.format(
-		            			"Reusing local deployment [{0}]",
-		            			locDep));
-		            }
-
-	            	return locDep;
-	            }
             }
 
             return verStore.getDeployment(meta);
