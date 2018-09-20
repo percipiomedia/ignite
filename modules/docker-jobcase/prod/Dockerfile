@@ -1,7 +1,7 @@
 # Base image for Jobcase Apache Ignite
 
 #
-# The image layout keeps same type of information in dedicated top-level directories. 
+# The image layout keeps same type of information in dedicated top-level directories.
 # E. g. all configuration information is in '/opt/jobcase/config'.
 #
 # Docker image layout:
@@ -31,7 +31,7 @@ ENV JAVA_VERSION=8 \
     JAVA_BUILD=13 \
     JAVA_PATH=96a7b8442fe848ef90c96a2fad6ed6d1
 
-# Java home    
+# Java home
 ENV JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-oracle
 
 # JobCase home
@@ -39,12 +39,12 @@ ENV JOBCASE_HOME /opt/jobcase
 
 # Location of configuration files.
 # # It includes logging configuration file
-# and Apache Ignite grid configuration files 
-# for common deployment scenarios. 
+# and Apache Ignite grid configuration files
+# for common deployment scenarios.
 ENV JOBCASE_CONFIG ${JOBCASE_HOME}/config
 
 # Location of container log files.
-# It includes the entrypoint-, Apache Ignite- 
+# It includes the entrypoint-, Apache Ignite-
 # and GC log files.
 ENV JOBCASE_LOGS ${JOBCASE_HOME}/logs
 
@@ -72,7 +72,7 @@ ENV IGNITE_DISCOVERY_FS ${JOBCASE_HOME}/discovery
 ENV IGNITE_DISCOVERY_S3_BUCKETNAME staging-mlstore-ignite-discovery-01
 
 # Ignite home
-# It includes the Apache Ignite startup script and binaries. 
+# It includes the Apache Ignite startup script and binaries.
 ENV IGNITE_HOME ${JOBCASE_HOME}/apache-ignite-fabric
 
 # Default deployment mode is CONTINUOUS
@@ -81,7 +81,7 @@ ENV IGNITE_DEPLOYMENT_MODE CONTINUOUS
 # Initial and maximum JVM Heap size
 ENV JVM_HEAP_SIZE 1g
 
-# JVM maximum amount of native memory that can be allocated for class metadata 
+# JVM maximum amount of native memory that can be allocated for class metadata
 ENV JVM_METASPACE_SIZE 1g
 
 # Define additional JVM options for debug purpose
@@ -121,14 +121,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN cd "/tmp" && \
     wget --header "Cookie: oraclelicense=accept-securebackup-cookie;" \
         "http://download.oracle.com/otn-pub/java/jdk/${JAVA_VERSION}u${JAVA_UPDATE}-b${JAVA_BUILD}/${JAVA_PATH}/jdk-${JAVA_VERSION}u${JAVA_UPDATE}-linux-x64.tar.gz" && \
-    tar -xzf "jdk-${JAVA_VERSION}u${JAVA_UPDATE}-linux-x64.tar.gz" && \    
+    tar -xzf "jdk-${JAVA_VERSION}u${JAVA_UPDATE}-linux-x64.tar.gz" && \
     mkdir -p "/usr/lib/jvm" && \
     mv "/tmp/jdk1.${JAVA_VERSION}.0_${JAVA_UPDATE}" "${JAVA_HOME}" && \
     wget --header "Cookie: oraclelicense=accept-securebackup-cookie;" \
         "http://download.oracle.com/otn-pub/java/jce/${JAVA_VERSION}/jce_policy-${JAVA_VERSION}.zip" && \
     unzip -jo -d "${JAVA_HOME}/jre/lib/security" "jce_policy-${JAVA_VERSION}.zip" && \
     rm /tmp/*
-        
+
 # Copy apache ignite binaries
 COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin ${IGNITE_HOME}/
 
@@ -144,6 +144,10 @@ COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-
 # Enable AOP support
 COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-aop ${IGNITE_HOME}/libs/ignite-aop/
 
+# Add snapshot manger plugin jar to distribution
+# See https://github.p11a.com/mgay/snapshot-manager-plugin
+COPY ./target/dependency/snapshot-manager-plugin-0.0.1-SNAPSHOT.jar ${IGNITE_HOME}/libs/
+
 # Copy log4j2 configuration file
 COPY ./ignite-log4j2.xml ${JOBCASE_CONFIG}/
 
@@ -157,7 +161,7 @@ COPY ./common.node.config.xml ${JOBCASE_CONFIG}/
 COPY ./file.discovery.node.config.xml ${JOBCASE_CONFIG}/
 
 # Copy s3 bucket discovery grid configuration file
-COPY ./s3bucket.discovery.node.config.xml ${JOBCASE_CONFIG}/    
+COPY ./s3bucket.discovery.node.config.xml ${JOBCASE_CONFIG}/
 
 # Copy default grid configuration file
 COPY ./multicast.discovery.node.config.xml ${JOBCASE_CONFIG}/
@@ -179,7 +183,7 @@ RUN chmod +x ${JOBCASE_HOME}/util.sh
 
 WORKDIR ${JOBCASE_HOME}
 
-# The exec form is required for CMD providing default arguments 
+# The exec form is required for CMD providing default arguments
 # instead shell form 'ENTRYPOINT /bin/bash ${JOBCASE_HOME}/entrypoint.sh'.
 # As a limitation, it will not do variable substitution like ${JOBCASE_HOME}.
 # So we call 'WORKDIR ${JOBCASE_HOME}' prior.
