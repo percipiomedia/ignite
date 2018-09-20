@@ -1,5 +1,5 @@
 # Jobcase Apache Ignite Production Docker Image
- 
+
 ## Introduction
 
 The docker image includes the Apache Ignite binaries V2.5. The binaries are built from GitHub branch ignite-2.5 [link](https://github.com/percipiomedia/ignite.git).
@@ -25,14 +25,14 @@ The docker image follows the control pattern for running commands/scripts at con
 ## Terminology
 
 Docker Engine:
-> *It is a client-server application with these major components:* 
-> * *A server which is a type of long-running program called a daemon process (the dockerd command).* 
-> * *A REST API which specifies interfaces that programs can use to talk to the daemon and instruct it what to do.* 
+> *It is a client-server application with these major components:*
+> * *A server which is a type of long-running program called a daemon process (the dockerd command).*
+> * *A REST API which specifies interfaces that programs can use to talk to the daemon and instruct it what to do.*
 > * *A command line interface (CLI) client (the docker command).*
 
 > *The daemon creates and manages Docker objects, such as images, containers, networks, and volumes.*
 
-Docker Image: 
+Docker Image:
 > *An image is an inert, immutable, file that’s essentially a snapshot of a container. Images are created with the build command, and they’ll produce a container when started with run.*
 
 Docker Container:
@@ -67,6 +67,12 @@ Unpack Apache Ignite's binary archive
 
 ~~~~
 unzip apache-ignite-fabric-*.zip
+~~~~
+
+Download additional dependency jars
+
+~~~~
+mvn dependency:copy-dependencies
 ~~~~
 
 Build docker image
@@ -152,14 +158,14 @@ Attach specific network to container:
 ~~~~
 sudo docker run -it
     --net=my-bridge
-    --name=ignite-percipio apacheignite/jobcase:2.4.0 
+    --name=ignite-percipio apacheignite/jobcase:2.4.0
 ~~~~
 
 When attaching a container to a bridge network and it should be reachable from the outside world, port mapping needs to be configured.
 
 ### Overlay Networks
 
-A overlay network ([documentation link][3]) allows network communication between containers on separate Docker engine hosts. It is used for so called multi-host network communication. 
+A overlay network ([documentation link][3]) allows network communication between containers on separate Docker engine hosts. It is used for so called multi-host network communication.
 
 Command for defining overlay network (using Swarm and standalone containers):
 
@@ -190,7 +196,7 @@ Example:
 
 ~~~~
 sudo docker run -it
-    --name=ignite-jobcase apacheignite/jobcase:2.4.0 
+    --name=ignite-jobcase apacheignite/jobcase:2.4.0
     "--launch ${IGNITE_HOME}/run.sh &;${IGNITE_HOME}/control.sh --activate"
 ~~~~
 
@@ -213,7 +219,7 @@ ENV IGNITE_REST_PORT 8080
 ~~~~
 
 The defined port value(s) can be changed at container startup by passing environment variable.
-E. g. `-e "IGNITE_DISCOVERY_PORT=48001"`. 
+E. g. `-e "IGNITE_DISCOVERY_PORT=48001"`.
 
 
 ### Volumes
@@ -244,7 +250,7 @@ sudo docker run -it
     -v /Users/mgay/ignite_nodes/logs:/opt/jobcase/logs
     -v /Users/mgay/ignite_nodes/db:/opt/jobcase/db
     -v /Users/mgay/ignite_nodes/discovery:/opt/jobcase/discovery
-    --name=ignite-percipio apacheignite/percipiomedia:2.4.0 
+    --name=ignite-percipio apacheignite/percipiomedia:2.4.0
 ~~~~
 
 ### Discovery
@@ -276,30 +282,30 @@ Start container using S3 bucket node discovery:
 
 ### Grid Persistence
 
-The grid configuration file(s) enable native persistence.  Apache Ignite stores a superset of data on disk, and as much as it can in RAM based on the capacity of the latter. 
+The grid configuration file(s) enable native persistence.  Apache Ignite stores a superset of data on disk, and as much as it can in RAM based on the capacity of the latter.
 
 The persistence storage folder is located under `/opt/jobcase/data`. A data region called `Default_Region` is created with `[initSize=256.0 MiB, maxSize=2.0 GiB, persistenceEnabled=true]`.
 
 As default, our grid configuration creates a unique id for the node by generating a UUID. And it is using the UUID to create a subdirectory under `/opt/jobcase/data`. In the subdirectory Apache Ignite persist the data for the node.
 
 ~~~~
-        <!-- As a default, IGNITE creates a unique id for the node by generating a UUID. 
-             It is used part of the persistent storage folder path. 
+        <!-- As a default, IGNITE creates a unique id for the node by generating a UUID.
+             It is used part of the persistent storage folder path.
              E. g. persistent storage folder /opt/jobcase/db/node00-49755452-fa53-41d4-82d3-cfff0b830a57.
-             
+
              It is recommended that the consistent id is set from outside IGNITE instead using generated value.
-             
-             If IGNITE_CONSISTENT_ID is not set, the custom version of  run.sh included within will force 
+
+             If IGNITE_CONSISTENT_ID is not set, the custom version of  run.sh included within will force
              it to a value of the form <prefix>_<uuid>, if a prefix can be determined.   The prefix will set to
              to the value of IGNITE_CONSISTENT_ID_PREFIX or if null to IGNITE_CLUSTER_NAME.
-             
-             If a prefix can be determined, if there is one directory in $IGNITE_PERSISTENT_STORE/store 
-             which matches prefix_*, then directory name will be used as IGNITE_CONSISTENT_ID.   If no directories, 
+
+             If a prefix can be determined, if there is one directory in $IGNITE_PERSISTENT_STORE/store
+             which matches prefix_*, then directory name will be used as IGNITE_CONSISTENT_ID.   If no directories,
              a new uuid will be generated.  If more than one match, that would be an error.
-             
-             The above allows different clusters with different names to co-exist on the same nodes, and allows 
+
+             The above allows different clusters with different names to co-exist on the same nodes, and allows
              one cluster to be restored from a snapshot of a cluster of a different name.  Two clusters using the
-             same prefix cannot exist on the same set of nodes.   
+             same prefix cannot exist on the same set of nodes.
          -->
         <property name="consistentId" value="#{systemEnvironment['IGNITE_CONSISTENT_ID']}"/>
 ~~~~
@@ -325,7 +331,7 @@ Default settings in Dockerfile:
 # Initial and maximum JVM Heap size
 ENV JVM_HEAP_SIZE 1g
 
-# JVM maximum amount of native memory that can be allocated for class metadata 
+# JVM maximum amount of native memory that can be allocated for class metadata
 ENV JVM_METASPACE_SIZE 1g
 
 # Ignite JVM settings
@@ -335,7 +341,7 @@ ENV JVM_OPTS="-XX:MaxMetaspaceSize=${JVM_METASPACE_SIZE} -server -Xms${JVM_HEAP_
 The default JVM settings can be changed at container startup by passing environment variable `JVM_OPTS` and/or `JVM_HEAP_SIZE` and/or `JVM_METASPACE_SIZE`.
 
 Setting memory values as equivalent in production environment:
- 
+
 ~~~~
 -e "JVM_METASPACE_SIZE=2g" -e "JVM_HEAP_SIZE=30g"
 ~~~~
@@ -384,7 +390,7 @@ The selected events are so called low frequency events. To avoid performance iss
             <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_STOPPED"/>
             <util:constant static-field="org.apache.ignite.events.EventType.EVT_CACHE_NODES_LEFT"/>
           </list>
-       </property>       
+       </property>
 ~~~~
 
 Quote from Aache Ignite documentation:
@@ -399,7 +405,7 @@ TODO
 
 ### Ignite REST API
 
-Apache Ignite supports REST protocol [link][1]. 
+Apache Ignite supports REST protocol [link][1].
 
 The API is accessible `http://<docker container ip>:8080/ignite?cmd=version`.
 The default port value is `IGNITE_REST_PORT=80801`.
@@ -424,7 +430,7 @@ The below command allows to jump straight into the VM on a Mac.
 screen ~/Library/Containers/com.docker.docker/Data/com.docker.driver.amd64-linux/tty
 ~~~~
 
-The Docker Engine for Mac uses a new file system called [link ‘osxfs’][11]. 
+The Docker Engine for Mac uses a new file system called [link ‘osxfs’][11].
 
 #### Networking
 
@@ -461,7 +467,7 @@ Add addressResolver to `<property name="communicationSpi">`. And update the ip-a
                              </map>
                          </constructor-arg>
                      </bean>
-                </property>                                
+                </property>
 ~~~~
 
 Launch the docker container with port mapping for discovery- and communication ports.
