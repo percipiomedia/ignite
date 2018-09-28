@@ -416,6 +416,20 @@ It can be overwritten by passing environment argument to the `docker run` comman
     -e "IGNITE_REST_PORT=<port value>"
 ~~~~
 
+## Java JMX with Docker
+
+There are additional JMX settings required for JMX monitoring when connecting from outside the docker network.
+
+* define com.sun.management.jmxremote.port and com.sun.management.jmxremote.rmi.port with a port number other than 9000. In our case 9010.
+* set com.sun.management.jmxremote.host and java.rmi.server.hostname to the catch-all IP address 0.0.0.0.
+* Mac OS X: The port mapping '-p 9010:9010' has to be added to the docker run command.
+
+Enter below connection string to VisualVM or any other monitoring tool:
+
+~~~~
+service:jmx:rmi:///jndi/rmi://localhost:9010/jmxrmi
+~~~~
+
 ## Appendix
 
 ### Mac OS X
