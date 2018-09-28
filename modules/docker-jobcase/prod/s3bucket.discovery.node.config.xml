@@ -17,12 +17,12 @@
   limitations under the License.
 -->
 
-<!-- 
-  The s3bucket.discovery.node.config.xml grid configuration file 
-  defines Amazon S3 Node Discovery. 
+<!--
+  The s3bucket.discovery.node.config.xml grid configuration file
+  defines Amazon S3 Node Discovery.
   See https://apacheignite-mix.readme.io/docs/amazon-aws#amazon-s3-based-discovery.
 
-  When specifying -e "CONFIG_URI=${JOBCASE_CONFIG}/s3bucket.discovery.node.config.xml" 
+  When specifying -e "CONFIG_URI=${JOBCASE_CONFIG}/s3bucket.discovery.node.config.xml"
   in the docker run command
   it will use s3bucket.discovery.node.config.xml as grid configuration file.
  -->
@@ -31,9 +31,9 @@
        xsi:schemaLocation="
        http://www.springframework.org/schema/beans
        http://www.springframework.org/schema/beans/spring-beans.xsd">
-       
+
     <import resource="common.node.config.xml"/>
-       
+
     <!--
         Alter configuration below as needed.
     -->
@@ -42,7 +42,7 @@
         <property name="discoverySpi">
             <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
                 <property name="localPort" value="#{systemEnvironment['IGNITE_DISCOVERY_PORT']}"/>
-                <property name="localPortRange" value="1"/>
+                <property name="localPortRange" value="#{systemEnvironment['IGNITE_PORT_RANGE']}"/>
                 <property name="ipFinder">
                     <!-- S3 bucket approach for discovery of cluster nodes -->
                     <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.s3.TcpDiscoveryS3IpFinder">
@@ -59,12 +59,12 @@
                     </bean>
                 </property>
             </bean>
-        </property>              
+        </property>
     </bean>
-    
+
     <!--
-        The S3 buckets used allow access to Ignite nodes themselves, so we don't need additional credentials 
+        The S3 buckets used allow access to Ignite nodes themselves, so we don't need additional credentials
     -->
-    <bean id="aws.creds" class="com.amazonaws.auth.DefaultAWSCredentialsProviderChain"/>   
-    
+    <bean id="aws.creds" class="com.amazonaws.auth.DefaultAWSCredentialsProviderChain"/>
+
 </beans>

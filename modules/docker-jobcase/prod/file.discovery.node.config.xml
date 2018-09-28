@@ -17,17 +17,17 @@
   limitations under the License.
 -->
 
-<!-- 
-  The file.discovery.node.config.xml grid configuration file 
+<!--
+  The file.discovery.node.config.xml grid configuration file
   defines Shared File System Based Apache Ignite Node Discovery.
 
   As the default, Apache Ignite is using multicast to discover its nodes.
-  This approach won't work on Amazon AWS and most deployments 
+  This approach won't work on Amazon AWS and most deployments
   which include native and dockerized applications.
-  
+
   Sharing a file system allows for successful node discovery.
-  
-  When specifying -e "CONFIG_URI=${JOBCASE_CONFIG}/file.discovery.node.config.xml" 
+
+  When specifying -e "CONFIG_URI=${JOBCASE_CONFIG}/file.discovery.node.config.xml"
   in the docker run command
   it will use file.discovery.node.config.xml as grid configuration file.
  -->
@@ -39,9 +39,9 @@
        http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/util
        http://www.springframework.org/schema/util/spring-util.xsd">
-       
+
     <import resource="common.node.config.xml"/>
-       
+
     <!--
         Alter configuration below as needed.
     -->
@@ -50,7 +50,7 @@
         <property name="discoverySpi">
             <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
                 <property name="localPort" value="#{systemEnvironment['IGNITE_DISCOVERY_PORT']}"/>
-                <property name="localPortRange" value="1"/>
+                <property name="localPortRange" value="#{systemEnvironment['IGNITE_PORT_RANGE']}"/>
                 <property name="ipFinder">
                     <!-- local FS discovery using a common mounted volume -->
                     <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.sharedfs.TcpDiscoverySharedFsIpFinder">
@@ -58,6 +58,6 @@
                     </bean>
                 </property>
             </bean>
-        </property>              
+        </property>
     </bean>
 </beans>
