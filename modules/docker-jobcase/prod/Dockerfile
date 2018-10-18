@@ -27,9 +27,9 @@ ENV IGNITE_VERSION 2.5.0
 
 # Oracle JDK Linux x64 download information
 ENV JAVA_VERSION=8 \
-    JAVA_UPDATE=181 \
-    JAVA_BUILD=13 \
-    JAVA_PATH=96a7b8442fe848ef90c96a2fad6ed6d1
+    JAVA_UPDATE=192 \
+    JAVA_BUILD=12 \
+    JAVA_PATH=750e1c8617c5452694857ad95c3ee230
 
 # Java home
 ENV JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-oracle
@@ -75,6 +75,9 @@ ENV IGNITE_DISCOVERY_S3_BUCKETNAME staging-mlstore-ignite-discovery-01
 # Ignite home
 # It includes the Apache Ignite startup script and binaries.
 ENV IGNITE_HOME ${JOBCASE_HOME}/apache-ignite-fabric
+
+# Ingite benchmark directory (https://apacheignite.readme.io/docs/perfomance-benchmarking)
+ENV IGNITE_BENCHMARK ${IGNITE_HOME}/benchmark
 
 # Default deployment mode is CONTINUOUS
 ENV IGNITE_DEPLOYMENT_MODE CONTINUOUS
@@ -148,6 +151,9 @@ COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-
 # Add snapshot manger plugin jar to distribution
 # See https://github.p11a.com/mgay/snapshot-manager-plugin
 COPY ./target/dependency/snapshot-manager-plugin-0.0.1-SNAPSHOT.jar ${IGNITE_HOME}/libs/
+
+# Add apache ignite benchmarks
+COPY ./ignite-benchmark ${IGNITE_BENCHMARK}/
 
 # Copy log4j2 configuration file
 COPY ./ignite-log4j2.xml ${JOBCASE_CONFIG}/
