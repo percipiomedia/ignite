@@ -57,16 +57,36 @@ Docker Container:
 
 ## Build
 
+Run all three maven commands in the project root directory
+
+~~~~
+mvn clean install -Pall-java,all-scala,licenses -DskipTests -Drelease.version=2.5.0
+mvn initialize -Prelease -X
+mvn package install -Pyardstick -pl modules/yardstick -am -DskipTests
+~~~~
+
 Copy Apache Ignite's binary archive into docker build context directory
 
 ~~~~
-cp -rfv ../../target/bin/apache-ignite-fabric-*.zip
+cp -rfv ../../target/bin/apache-ignite-fabric-*.zip .
 ~~~~
 
 Unpack Apache Ignite's binary archive
 
 ~~~~
 unzip apache-ignite-fabric-*.zip
+~~~~
+
+Copy Apache Ignite's benchmark archive into docker build context directory
+
+~~~~
+cp -rfv ../../yardstick/target/ignite-benchmark-*.zip .
+~~~~
+
+Unpack Apache Ignite's benchmark archive
+
+~~~~
+unzip ignite-benchmark-*.zip
 ~~~~
 
 Download additional dependency jars
