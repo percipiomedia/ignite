@@ -77,7 +77,7 @@ ENV IGNITE_DISCOVERY_S3_BUCKETNAME staging-mlstore-ignite-discovery-01
 ENV IGNITE_HOME ${JOBCASE_HOME}/apache-ignite-fabric
 
 # Ingite benchmark directory (https://apacheignite.readme.io/docs/perfomance-benchmarking)
-ENV IGNITE_BENCHMARK ${IGNITE_HOME}/benchmark
+ENV IGNITE_BENCHMARK ${IGNITE_HOME}/benchmarks
 
 # Default deployment mode is CONTINUOUS
 ENV IGNITE_DEPLOYMENT_MODE CONTINUOUS
@@ -118,6 +118,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         procps \
         net-tools \
         netcat-openbsd \
+        ssh \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p ${JOBCASE_LOGS}
 
@@ -151,9 +152,6 @@ COPY ./apache-ignite-fabric-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-
 # Add snapshot manger plugin jar to distribution
 # See https://github.p11a.com/mgay/snapshot-manager-plugin
 COPY ./target/dependency/snapshot-manager-plugin-0.0.1-SNAPSHOT.jar ${IGNITE_HOME}/libs/
-
-# Add apache ignite benchmarks
-COPY ./ignite-benchmark ${IGNITE_BENCHMARK}/
 
 # Copy log4j2 configuration file
 COPY ./ignite-log4j2.xml ${JOBCASE_CONFIG}/
