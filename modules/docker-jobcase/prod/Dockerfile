@@ -118,7 +118,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         procps \
         net-tools \
         netcat-openbsd \
-        ssh \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p ${JOBCASE_LOGS}
 
