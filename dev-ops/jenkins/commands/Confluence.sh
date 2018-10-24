@@ -134,7 +134,7 @@ if [ ${exitCode} -ne 0 ]; then
 fi
 
 if [[ "${ATTACHMENT}" = true ]]; then
-	jira_add_attachment_ticket "${CONTENT_KEY}" "${FILE_NAME}"
+	confluence_upload_attachment "${CONTENT_KEY}" "${FILE_NAME}"
 
 	exit ${exitCode}
 fi

@@ -398,7 +398,7 @@ function confluence_upload_attachment() {
 		-H "${AUTH_HEADER}" \
 		-H "X-Atlassian-Token: nocheck" \
 		-F "file=@${attachment}" \
-		${JIRA_DOMAIN}/confluence/rest/api/content/${key}/child/attachment)
+		${JIRA_DOMAIN}/wiki/rest/api/content/${key}/child/attachment)
   	exitCode=$?
 
 	# extract the body
