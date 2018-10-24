@@ -38,7 +38,7 @@ function usage() {
 function parse() {
   # Option strings
   local SHORT=hvds:
-  local LONG=help,verbose,debug,user:,token:,key:,attachment:
+  local LONG=help,verbose,debug,user:,token:,key:,attachment:,create:,space:,content:
 
   # read the options
   local OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -57,6 +57,11 @@ function parse() {
   CONTENT_KEY=""
   ATTACHMENT=false
   FILE_NAME=""
+  CREATE=false
+  PAGE_TITLE=""
+  CONTENT=false
+  HTML_CONTENT=""
+  SPACE_KEY=""
 
   # extract options and their arguments into variables.
   while true ; do
@@ -85,6 +90,18 @@ function parse() {
         ;;
       --attachment )
         ATTACHMENT=true; FILE_NAME="$2"
+        shift 2
+        ;;
+      --create )
+        CREATE=true; PAGE_TITLE="$2"
+        shift 2
+        ;;
+      --space )
+        SPACE_KEY="$2"
+        shift 2
+        ;;
+      --content )
+        CONTENT=true; HTML_CONTENT="$2"
         shift 2
         ;;
       -- )
@@ -135,6 +152,13 @@ fi
 
 if [[ "${ATTACHMENT}" = true ]]; then
 	confluence_upload_attachment "${CONTENT_KEY}" "${FILE_NAME}"
+
+	exit ${exitCode}
+fi
+
+if [[ "${CREATE}" = true ]]; then
+	confluence_create_page ../modules/create-child-page-template.json "${PAGE_TITLE}" \
+	 "${CONTENT_KEY}" "${SPACE_KEY}" "${HTML_CONTENT}"
 
 	exit ${exitCode}
 fi
