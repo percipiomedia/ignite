@@ -417,3 +417,145 @@ function confluence_upload_attachment() {
 
 	return_result+=("${http_body}")
 }
+
+#
+# It executes a create page request.
+#
+# argument:
+#  template json file (required)
+#  page title string (required).
+#  parent page id string (required).
+#  space key string (required).
+#  html content string (required).
+#
+# return: It returns result in the array variable ${return_result}.
+#
+function confluence_create_page() {
+	local template="$1"
+	local page_title="$2"
+	local parent_page_id="$3"
+	local space_key="$4"
+	local html_content="$5"
+
+	unset return_result
+
+    request_data=$(cat ${template} | \
+  		jq --arg PAGE_TITLE "${page_title}" \
+     		--arg PARENT_PAGE_ID "${parent_page_id}" \
+     		--arg SPACE_KEY "${space_key}" \
+     		--arg HTML_CONTENT "${html_content}" \
+     		'.title=$PAGE_TITLE | .ancestors[0].id=$PARENT_PAGE_ID | .space.key=$SPACE_KEY | .body.storage.value=$HTML_CONTENT')
+
+    echo "${request_data}" > request_data.json
+
+	result=$(curl \
+		-s \
+   		-X POST \
+		-w 'HTTPSTATUS:%{response_code}' \
+   		--data @request_data.json \
+   		-H "${AUTH_HEADER}" \
+   		-H "Content-Type: application/json" \
+   		${JIRA_DOMAIN}/wiki/rest/api/content)
+  	exitCode=$?
+
+    if [ ${exitCode} -ne 0 ]; then
+		log_error "REST call [${JIRA_DOMAIN}/wiki/rest/api/content] has failed [${exitCode}]."
+      	return 1
+    fi
+
+	# extract the body
+	http_body=$(echo $result | sed -e 's/HTTPSTATUS\:.*//g')
+
+	# extract the status
+	http_status=$(echo $result | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+
+	log_info "create result ${http_body}"
+	log_info "http status result ${http_status}"
+
+	return_result+=("${http_body}")
+
+	# The request has been fulfilled and has resulted in one new resources being created.
+	if [ ${http_status} -ne 200 ]; then
+		${exitCode}=${http_status}
+		return 1
+	fi
+
+  	# JQ_QUERY='"\(.key)\t\(.id)\t\(.self)"'
+
+	page_id=$(echo "${http_body}" | jq -r '.id')
+
+	log_info "new page id ${page_id}"
+
+	return 0
+}
+
+#
+# It executes a update page request.
+#
+# argument:
+#  template json file (required)
+#  page title string (required).
+#  page id string (required).
+#  space key string (required).
+#  html content string (required).
+#
+# return: It returns result in the array variable ${return_result}.
+#
+function confluence_update_page() {
+	local template="$1"
+	local page_title="$2"
+	local page_id="$3"
+	local space_key="$4"
+	local html_content="$5"
+
+	unset return_result
+
+    request_data=$(cat ${template} | \
+  		jq --arg PAGE_TITLE "${page_title}" \
+  			--arg PAGE_ID "${page_id}" \
+     		--arg SPACE_KEY "${space_key}" \
+     		--arg HTML_CONTENT "${html_content}" \
+     		'.title=$PAGE_TITLE | .id=$PAGE_ID | .space.key=$SPACE_KEY | .body.storage.value=$HTML_CONTENT')
+
+    echo "${request_data}" > request_data.json
+
+	result=$(curl \
+		-s \
+   		-X PUT \
+		-w 'HTTPSTATUS:%{response_code}' \
+   		--data @request_data.json \
+   		-H "${AUTH_HEADER}" \
+   		-H "Content-Type: application/json" \
+   		${JIRA_DOMAIN}/wiki/rest/api/content/${page_id})
+  	exitCode=$?
+
+    if [ ${exitCode} -ne 0 ]; then
+		log_error "REST PUT call [${JIRA_DOMAIN}/wiki/rest/api/content] has failed [${exitCode}]."
+      	return 1
+    fi
+
+	# extract the body
+	http_body=$(echo $result | sed -e 's/HTTPSTATUS\:.*//g')
+
+	# extract the status
+	http_status=$(echo $result | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+
+	log_info "update result ${http_body}"
+	log_info "http status result ${http_status}"
+
+	return_result+=("${http_body}")
+
+	# The request has been fulfilled and has resulted in one new resources being created.
+	if [ ${http_status} -ne 200 ]; then
+		${exitCode}=${http_status}
+		return 1
+	fi
+
+  	# JQ_QUERY='"\(.key)\t\(.id)\t\(.self)"'
+
+	page_id=$(echo "${http_body}" | jq -r '.id')
+
+    # echo -e "${result}"
+
+	return 0
+}
