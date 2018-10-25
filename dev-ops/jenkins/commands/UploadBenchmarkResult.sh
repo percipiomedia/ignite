@@ -38,7 +38,7 @@ function usage() {
 function parse() {
   # Option strings
   local SHORT=hvds:
-  local LONG=help,verbose,debug,user:,token:,key:,parent:,attachment:,create:,space:,content:,update:
+  local LONG=help,verbose,debug,user:,token:,path:
 
   # read the options
   local OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -54,16 +54,7 @@ function parse() {
   USER_NAME=""
   TOKEN=false
   AUTH_TOKEN=""
-  CONTENT_KEY=""
-  PARENT_CONTENT_KEY=""
-  ATTACHMENT=false
-  FILE_NAME=""
-  CREATE=false
-  PAGE_TITLE=""
-  CONTENT=false
-  HTML_CONTENT=""
-  SPACE_KEY=""
-  UPDATE=false
+  BENCHMARK_RESULT_PATH=""
 
   # extract options and their arguments into variables.
   while true ; do
@@ -86,32 +77,8 @@ function parse() {
         TOKEN=true; AUTH_TOKEN="$2"
         shift 2
         ;;
-      --key )
-        CONTENT_KEY="$2"
-        shift 2
-        ;;
-      --parent )
-        PARENT_CONTENT_KEY="$2"
-        shift 2
-        ;;
-      --attachment )
-        ATTACHMENT=true; FILE_NAME="$2"
-        shift 2
-        ;;
-      --create )
-        CREATE=true; PAGE_TITLE="$2"
-        shift 2
-        ;;
-      --space )
-        SPACE_KEY="$2"
-        shift 2
-        ;;
-      --content )
-        CONTENT=true; HTML_CONTENT="$2"
-        shift 2
-        ;;
-      --update )
-        UPDATE=true; PAGE_TITLE="$2"
+      --path )
+        BENCHMARK_RESULT_PATH="$2"
         shift 2
         ;;
       -- )
@@ -124,20 +91,11 @@ function parse() {
   done
 }
 
-function search() {
-	jira_search_ticket ../modules/jira-search-ticket-template.json "${SEARCH_STRING}"
-
-	exit ${exitCode}
-}
-
-function create() {
-	jira_create_ticket ../modules/jira-create-ticket-template.json "${PROJECT_VALUE}" "${SUMMARY_VALUE}" "${DESCRIPTION_VALUE}"
-
-	exit ${exitCode}
-}
-
 unset LOG_FILE
 export LOG_FILE=${current_dir}/jira-dev-ops.log
+
+export PARENT_CONFLUENCE_PAGE_ID=445219032
+export SPACE_KEY='~95425488'
 
 parse "$@"
 
@@ -153,31 +111,69 @@ if [[ "${DEBUG}" = true ]]; then
   set -o xtrace
 fi
 
+PAGE_TITLE=$(basename ${BENCHMARK_RESULT_PATH})
+
 jira_authentication "${USER_NAME}" "${AUTH_TOKEN}"
 
+confluence_create_page ../modules/create-child-page-template.json "${PAGE_TITLE}" \
+	 "${PARENT_CONFLUENCE_PAGE_ID}" "${SPACE_KEY}" ""
+exitCode=$?
+
 if [ ${exitCode} -ne 0 ]; then
-	log_error "REST authentication has failed [${exitCode}]."
-  	exit ${exitCode}
+  log_error "create confluence page failed with exit code ${exitCode}"
+
+  exit ${exitCode}
 fi
 
-if [[ "${ATTACHMENT}" = true ]]; then
-	confluence_upload_attachment "${CONTENT_KEY}" "${FILE_NAME}"
+if [ ${#return_result[@]} -eq 1 ]; then
+	NEW_PAGE_ID=$(echo "${return_result[0]}" | jq -r '.id')
 
-	exit ${exitCode}
+	log_info "${NEW_PAGE_ID}"
+else
+	log_error "invalid create page result [${return_result[0]}] for request"
+	exit 1
 fi
 
-if [[ "${CREATE}" = true ]]; then
-	confluence_create_page ../modules/create-child-page-template.json "${PAGE_TITLE}" \
-	 "${PARENT_CONTENT_KEY}" "${SPACE_KEY}" "${HTML_CONTENT}"
+# upload images
+images=$(ls ${BENCHMARK_RESULT_PATH}/*png)
 
-	exit ${exitCode}
-fi
+for image_name in ${images}
+do
+	echo $image_name
 
-if [[ "${UPDATE}" = true ]]; then
-	confluence_update_page ../modules/update-page-template.json "${PAGE_TITLE}" \
-	 "${CONTENT_KEY}" "${SPACE_KEY}" "${HTML_CONTENT}"
+	confluence_upload_attachment "${NEW_PAGE_ID}" "${image_name}"
+	exitCode=$?
 
-	exit ${exitCode}
-fi
+	if [ ${exitCode} -ne 0 ]; then
+	  log_error "upload image ${image_name} failed with exit code ${exitCode}"
+
+	  exit ${exitCode}
+	fi
+done
+
+# extract html body content
+# remove body tag
+# fix br tag
+tag=body
+HTLM_CONTENT=$(sed -n "/<$tag>/,/<\/$tag>/p" ${BENCHMARK_RESULT_PATH}/Results.html)
+HTLM_CONTENT=$(echo "${HTLM_CONTENT}" | sed -e "/<$tag>/d")
+HTLM_CONTENT=$(echo "${HTLM_CONTENT}" | sed -e "/<\/$tag>/d")
+HTLM_CONTENT=$(echo "${HTLM_CONTENT}" | sed -e "s/<br>/<br\/>/g")
+
+IMAGE_BASE_URL="https://percipio.jira.com/wiki/download/thumbnails/${NEW_PAGE_ID}"
+
+for image_name in ${images}
+do
+	image_name=$(basename "${image_name}")
+
+	absolute_url="${IMAGE_BASE_URL}/${image_name}"
+
+	HTLM_CONTENT=${HTLM_CONTENT/${image_name}/${absolute_url}}
+done
+
+log_info "updating page with ${HTLM_CONTENT}"
+
+confluence_update_page ../modules/update-page-template.json "${PAGE_TITLE}" \
+	 "${NEW_PAGE_ID}" "${SPACE_KEY}" "${HTLM_CONTENT}"
 
 exit 0

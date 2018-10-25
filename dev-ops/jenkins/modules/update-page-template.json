@@ -1,13 +1,13 @@
 {
 	"id": "$PAGE_ID",
 	"type": "page",
-	"title": "new page",
+	"title": "$PAGE_TITLE",
 	"space": {
 		"key": "$SPACE_KEY"
 	},
 	"body": {
 		"storage": {
-			"value": "<p>This is the updated text for the new page</p>",
+			"value": "$HTML_CONTENT",
 			"representation": "storage"
 		}
 	},
