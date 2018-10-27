@@ -154,7 +154,7 @@ do
     fi
 
     #  add and start ssh server (sshd)
-	docker exec ${node_name} apt-get install ssh openssh-server -y
+	docker exec ${node_name} apt-get update && apt-get install ssh openssh-server -y
 	docker exec ${node_name} mkdir -p /run/sshd
 	docker exec ${node_name} mkdir -p /root/.ssh
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa.pub ${node_name}:/root/.ssh/authorized_keys
@@ -190,7 +190,7 @@ done
 
 # add remote node ip information to benchmark files
 sed -e "s/IPLIST/${node_discovery_xml_list}/g" \
-	${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config-template.xml > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config-template.xml
+	${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config-template.xml > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config.xml
 
 sed -e "s/IPLIST/${server_hosts_prop}/g" \
 	${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-sample-template.properties > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-sample.properties
