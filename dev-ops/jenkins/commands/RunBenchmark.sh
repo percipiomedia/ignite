@@ -120,7 +120,7 @@ idx=0
 # generate node names
 while [ ${idx} -lt ${NUM_NODES} ]
 do
-	node_name=`hostname`-data${idx}
+	node_name="ignite-jobcase-data${idx}"
 
 	node_names+=("${node_name}")
 
@@ -144,7 +144,7 @@ do
         -e "CONFIG_URI=file:///opt/jobcase/config/multicast.discovery.node.config.xml" \
         -e JVM_HEAP_SIZE=${JVM_HEAP_SIZE} \
         -e JVM_METASPACE_SIZE=${JVM_METASPACE_SIZE} \
-        --name=ignite-jobcase-data0 apacheignite/jobcase:2.5.0 \
+        --name=${node_name} apacheignite/jobcase:2.5.0 \
         --debug --launch ls 2>&1)
 	exitCode=$?
 
@@ -197,7 +197,7 @@ sed -e "s/IPLIST/${server_hosts_prop}/g" \
 
 ##########################################################################################
 # start ignite snapshot service node
-snap_node_name=`hostname`-snap
+snap_node_name='ignite-jobcase-snapshot'
 
 docker run \
         -d=true \
@@ -207,7 +207,7 @@ docker run \
         -v /var/run/jobcase-snapshot.sock:/var/run/jobcase-snapshot.sock \
         -e IGNITE_CONSISTENT_ID=${snap_node_name} \
         -e "CONFIG_URI=file:///opt/jobcase/config/multicast.discovery.snapshot.service.client.node.config.xml" \
-        --name=ignite-jobcase-snapshot apacheignite/jobcase-snapshot:2.5.0 \
+        --name=${snap_node_name} apacheignite/jobcase-snapshot:2.5.0 \
         --debug --launch ls
 
 # get IGNITE_HOME env
@@ -227,5 +227,11 @@ docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./b
 docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && tar cvfz benchmark.tar.gz output"
 
 docker exec ${snap_node_name} cat ${ignite_home}/benchmarks/benchmark.tar.gz > ${WORKSPACE}/benchmark${BUILD_NUMBER}.tar.gz
+
+# stop containers
+docker stop ${snap_node_name} ${node_names}
+
+# delete stopped container(s)
+docker container prune --force
 
 exit 0
