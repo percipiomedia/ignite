@@ -68,16 +68,16 @@ function parse() {
         DEBUG=true
         shift
         ;;
-      --user )
-        USER=true; USER_NAME="$2"
+      --num-nodes )
+        NUM_NODES="$2"
         shift 2
         ;;
-      --token )
-        TOKEN=true; AUTH_TOKEN="$2"
+      --jvm-heap-size )
+        JVM_HEAP_SIZE="$2"
         shift 2
         ;;
-      --path )
-        BENCHMARK_RESULT_PATH="$2"
+      --jvm-meta-size )
+        JVM_METASPACE_SIZE="$2"
         shift 2
         ;;
       -- )
