@@ -96,8 +96,13 @@ ENV JVM_DEBUG_PORT 1044
 # other things to pass to JVM without needing to restate default values.
 ENV JVM_ADDITIONAL_OPTS ""
 
-# Ignite common JVM settings.   Run.sh will concatenate the JVM_ settings.
-ENV JVM_OPTS="-server -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC -Djava.net.preferIPv4Stack=true"
+# Ignite common JVM settings. Run.sh will concatenate the JVM_ settings.
+# JVM 8u192 introduces new flags for CPU quota enforcement.
+# It is using the docker container 'cgroup' information ('--cpu' or '--cpu-period' along with '--cpu-quota').
+# If the information has not set or incorrect, it causes invalid CPU count.
+# At the moment, we don't ensure for correct values.
+# So we disable the container support with '-XX:-UseContainerSupport'.
+ENV JVM_OPTS="-server -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC -XX:-UseContainerSupport -Djava.net.preferIPv4Stack=true"
 
 # GC logging is only for Ignite itself, not utilities like Visor or control.sh
 ENV JVM_IGNITE_GC_LOGGING_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M"
