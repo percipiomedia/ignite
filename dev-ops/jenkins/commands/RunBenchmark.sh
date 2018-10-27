@@ -39,7 +39,7 @@ function usage() {
 function parse() {
   # Option strings
   local SHORT=hvds:
-  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:
+  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:
 
   # read the options
   local OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -54,6 +54,7 @@ function parse() {
   NUM_NODES=2
   JVM_HEAP_SIZE='2g'
   JVM_METASPACE_SIZE='2g'
+  STOP_CONTAINERS=true
 
   # extract options and their arguments into variables.
   while true ; do
@@ -78,6 +79,10 @@ function parse() {
         ;;
       --jvm-meta-size )
         JVM_METASPACE_SIZE="$2"
+        shift 2
+        ;;
+      --stop )
+        STOP_CONTAINERS="$2"
         shift 2
         ;;
       -- )
@@ -154,7 +159,8 @@ do
     fi
 
     #  add and start ssh server (sshd)
-	docker exec ${node_name} apt-get update && apt-get install ssh openssh-server -y
+	docker exec ${node_name} apt-get update
+	docker exec ${node_name} apt-get install ssh openssh-server -y
 	docker exec ${node_name} mkdir -p /run/sshd
 	docker exec ${node_name} mkdir -p /root/.ssh
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa.pub ${node_name}:/root/.ssh/authorized_keys
@@ -228,10 +234,12 @@ docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && tar
 
 docker exec ${snap_node_name} cat ${ignite_home}/benchmarks/benchmark.tar.gz > ${WORKSPACE}/benchmark${BUILD_NUMBER}.tar.gz
 
-# stop containers
-docker stop ${snap_node_name} ${node_names}
+if [ ${STOP_CONTAINERS} = true ]; then
+	# stop containers
+	docker stop ${snap_node_name} ${node_names}
 
-# delete stopped container(s)
-docker container prune --force
+	# delete stopped container(s)
+	docker container prune --force
+fi
 
 exit 0
