@@ -169,6 +169,24 @@ fi
 if [[ "${CREATE}" = true ]]; then
 	confluence_create_page ../modules/create-child-page-template.json "${PAGE_TITLE}" \
 	 "${PARENT_CONTENT_KEY}" "${SPACE_KEY}" "${HTML_CONTENT}"
+	 exitCode=$?
+
+	if [ ${exitCode} -ne 0 ]; then
+	  log_error "create confluence page failed with exit code ${exitCode}"
+
+	  exit ${exitCode}
+	fi
+
+	if [ ${#return_result[@]} -eq 1 ]; then
+		NEW_PAGE_ID=$(echo "${return_result[0]}" | jq -r '.id')
+
+		log_info "${NEW_PAGE_ID}"
+
+		echo "${return_result[0]}"
+	else
+		log_error "invalid create page result [${return_result[0]}] for request"
+		exit 1
+	fi
 
 	exit ${exitCode}
 fi
