@@ -136,8 +136,10 @@ done
 result=$(echo "DOCKER_HOST_NAME=$(hostname)" | sudo tee /home/ec2-user/mgay/ignite_nodes/db/host.info)
 result=$(/sbin/ip route get 1 | awk '{print "DOCKER_HOST_IP="$NF;exit}' | sudo tee -a /home/ec2-user/mgay/ignite_nodes/db/host.info)
 
-for node_name in ${node_names}
+for node_name in ${node_names[*]}
 do
+	log_info "launch node ${node_name}"
+
 	result=$(docker run \
         -d=true \
         -v /home/ec2-user/mgay/ignite_nodes/logs/${node_name}:/opt/jobcase/logs \
