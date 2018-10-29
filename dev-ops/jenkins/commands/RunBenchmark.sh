@@ -187,7 +187,7 @@ do
 
     node_ip_addresses[${node_name}]="${ip_address}"
 
-    node_discovery_xml_list="${node_discovery_xml_list}<value>${ip_address}:47500<\/value"
+    node_discovery_xml_list="${node_discovery_xml_list}<value>${ip_address}:47500<\/value>"
 
     if [ "${server_hosts_prop}" != "" ]; then
     	server_hosts_prop="${server_hosts_prop},"
