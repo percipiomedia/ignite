@@ -238,7 +238,7 @@ docker exec ${snap_node_name} cat ${ignite_home}/benchmarks/benchmark.tar.gz > $
 
 if [ ${STOP_CONTAINERS} = true ]; then
 	# stop containers
-	docker stop ${snap_node_name} ${node_names}
+	docker stop ${snap_node_name} ${node_names[*]}
 
 	# delete stopped container(s)
 	docker container prune --force

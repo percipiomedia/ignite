@@ -38,7 +38,7 @@ function usage() {
 function parse() {
   # Option strings
   local SHORT=hvds:
-  local LONG=help,verbose,debug,user:,token:,path:
+  local LONG=help,verbose,debug,user:,token:,path:,spacekey:,parentpageid:
 
   # read the options
   local OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -55,6 +55,8 @@ function parse() {
   TOKEN=false
   AUTH_TOKEN=""
   BENCHMARK_RESULT_PATH=""
+  SPACE_KEY=""
+  PARENT_CONFLUENCE_PAGE_ID=""
 
   # extract options and their arguments into variables.
   while true ; do
@@ -81,6 +83,14 @@ function parse() {
         BENCHMARK_RESULT_PATH="$2"
         shift 2
         ;;
+      --spacekey )
+        SPACE_KEY="$2"
+        shift 2
+        ;;
+      --parentpageid )
+        PARENT_CONFLUENCE_PAGE_ID="$2"
+        shift 2
+        ;;
       -- )
         shift
         break
@@ -93,9 +103,6 @@ function parse() {
 
 unset LOG_FILE
 export LOG_FILE=${current_dir}/jira-dev-ops.log
-
-export PARENT_CONFLUENCE_PAGE_ID=445219032
-export SPACE_KEY='~95425488'
 
 parse "$@"
 
