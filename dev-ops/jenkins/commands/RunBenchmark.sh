@@ -39,7 +39,7 @@ function usage() {
 function parse() {
   # Option strings
   local SHORT=hvds:
-  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:
+  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:,runall:
 
   # read the options
   local OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -55,6 +55,7 @@ function parse() {
   JVM_HEAP_SIZE='2g'
   JVM_METASPACE_SIZE='2g'
   STOP_CONTAINERS=true
+  RUN_ALL=false
 
   # extract options and their arguments into variables.
   while true ; do
@@ -83,6 +84,10 @@ function parse() {
         ;;
       --stop )
         STOP_CONTAINERS="$2"
+        shift 2
+        ;;
+      --runall )
+        RUN_ALL="$2"
         shift 2
         ;;
       -- )
@@ -200,8 +205,13 @@ done
 sed -e "s/IPLIST/${node_discovery_xml_list}/g" \
 	${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config-template.xml > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config.xml
 
-sed -e "s/IPLIST/${server_hosts_prop}/g" \
-	${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-sample-template.properties > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-sample.properties
+if [ ${RUN_ALL} = true ]; then
+	sed -e "s/IPLIST/${server_hosts_prop}/g" \
+		${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-all-template.properties > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-all.properties
+else
+	sed -e "s/IPLIST/${server_hosts_prop}/g" \
+		${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-sample-template.properties > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-sample.properties
+fi
 
 ##########################################################################################
 # start ignite snapshot service node
@@ -229,7 +239,11 @@ docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa ${snap_node_name}:/
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa.pub ${snap_node_name}:/root/.ssh/
 
 # execute benchmark
-docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./bin/benchmark-run-all.sh config/benchmark-remote-sample.properties"
+if [ ${RUN_ALL} = true ]; then
+	docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./bin/benchmark-run-all.sh config/benchmark-remote-all.properties"
+else
+	docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./bin/benchmark-run-all.sh config/benchmark-remote-sample.properties"
+fi
 
 # tar outcome
 docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && tar cvfz benchmark.tar.gz output"
