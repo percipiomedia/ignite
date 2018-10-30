@@ -231,6 +231,10 @@ docker run \
 # get IGNITE_HOME env
 ignite_home=$(docker exec ${snap_node_name} printenv IGNITE_HOME)
 
+# benchmark-wait-driver-up.sh requires bc app
+docker exec ${snap_node_name} apt-get update
+docker exec ${snap_node_name} apt-get install bc -y
+
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
 
 if [ ${RUN_ALL} = true ]; then
