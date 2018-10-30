@@ -232,7 +232,12 @@ docker run \
 ignite_home=$(docker exec ${snap_node_name} printenv IGNITE_HOME)
 
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
-docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-sample.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
+
+if [ ${RUN_ALL} = true ]; then
+	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-all.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
+else
+	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-sample.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
+fi
 
 docker exec ${snap_node_name} mkdir -p /root/.ssh
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa ${snap_node_name}:/root/.ssh/
