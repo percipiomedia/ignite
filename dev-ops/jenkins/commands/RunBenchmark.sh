@@ -267,6 +267,7 @@ fi
 # updated version of benchmark script files
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/script/benchmark-drivers-start.sh ${snap_node_name}:${ignite_home}/benchmarks/bin/
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/script/benchmark-servers-start.sh ${snap_node_name}:${ignite_home}/benchmarks/bin/
+docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/script/benchmark-bootstrap.sh ${snap_node_name}:${ignite_home}/benchmarks/bin/
 
 docker exec ${snap_node_name} mkdir -p /root/.ssh
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa ${snap_node_name}:/root/.ssh/
