@@ -170,9 +170,10 @@ do
       	exit ${exitCode}
     fi
 
-    #  add and start ssh server (sshd)
+    # add and start ssh server (sshd)
+    # and add dstat for benchmark data
 	docker exec ${node_name} apt-get update
-	docker exec ${node_name} apt-get install ssh openssh-server -y
+	docker exec ${node_name} apt-get install ssh openssh-server dstat -y
 	docker exec ${node_name} mkdir -p /run/sshd
 	docker exec ${node_name} mkdir -p /root/.ssh
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa.pub ${node_name}:/root/.ssh/authorized_keys
@@ -236,6 +237,8 @@ docker run \
         -v /var/run/jobcase-snapshot.sock:/var/run/jobcase-snapshot.sock \
         -e IGNITE_CONSISTENT_ID=${snap_node_name} \
         -e "CONFIG_URI=file:///opt/jobcase/config/multicast.discovery.snapshot.service.client.node.config.xml" \
+        -e JVM_HEAP_SIZE=${JVM_HEAP_SIZE} \
+        -e JVM_METASPACE_SIZE=${JVM_METASPACE_SIZE} \
         --name=${snap_node_name} apacheignite/jobcase-snapshot:2.5.0 \
         --debug --launch ls
 
@@ -243,8 +246,9 @@ docker run \
 ignite_home=$(docker exec ${snap_node_name} printenv IGNITE_HOME)
 
 # benchmark-wait-driver-up.sh requires bc app
+# and add dstat for benchmark data
 docker exec ${snap_node_name} apt-get update
-docker exec ${snap_node_name} apt-get install bc -y
+docker exec ${snap_node_name} apt-get install bc dstat -y
 
 if [ ${RUN_MLSTORE} = true ]; then
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
@@ -259,6 +263,10 @@ elif [ ${RUN_ALL} = true ]; then
 else
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-sample.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
 fi
+
+# updated version of benchmark script files
+docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/bin/benchmark-drivers-start.sh ${snap_node_name}:${ignite_home}/benchmarks/bin/
+docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/bin/benchmark-servers-start.sh ${snap_node_name}:${ignite_home}/benchmarks/bin/
 
 docker exec ${snap_node_name} mkdir -p /root/.ssh
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa ${snap_node_name}:/root/.ssh/
