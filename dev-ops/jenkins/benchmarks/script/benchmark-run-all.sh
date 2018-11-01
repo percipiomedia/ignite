@@ -176,7 +176,7 @@ function collect_results()
             fi
             scp -o StrictHostKeyChecking=no -rq $ip:$LOGS_BASE/../../output/$log_dir_name/* $MAIN_DIR/output/$log_dir_name
 
-            if [[ ! -v ${CLEAR_REMOTE_WORK_DIR} ]] || [[ ${CLEAR_REMOTE_WORK_DIR} = true ]]; then
+            if [ ! -v CLEAR_REMOTE_WORK_DIR ] || [ ${CLEAR_REMOTE_WORK_DIR} = true ]; then
             	clear_remote_work_directory $ip
             fi
         fi
