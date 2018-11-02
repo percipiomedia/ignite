@@ -22,6 +22,7 @@ import static org.apache.ignite.internal.IgniteNodeAttributes.ATTR_MARSHALLER;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCheckedException;
@@ -194,39 +195,49 @@ public class IgniteNode implements BenchmarkServer {
 
         BenchmarkUtils.println("Configured marshaller: " + ignite.cluster().localNode().attribute(ATTR_MARSHALLER));
 
-        // launch dstat on each ignite node
-        // TODO only if it is not running driver too
-        for(final String probeClassName : cfg.defaultProbeClassNames()) {
-        	if(probeClassName.contains("DStatProbe")) {
-                BenchmarkUtils.println("Start DStatProbe: "
-                		+ ignite.cluster().localNode().addresses() + " output " + cfg.outputFolder());
+        // launch dstat on each ignite server node
+        final int id = cfg.memberId();
 
-                probeDstat = new DStatProbe();
+        final Properties props = System.getProperties();
 
-                final BenchmarkDriverIgniteNode driver = new BenchmarkDriverIgniteNode();
-                driver.setUp(cfg);
-
-                try {
-					probeDstat.start(driver, cfg);
-				} catch (Exception e) {
-	                BenchmarkUtils.println("DStatProbe start failed "
-	                		+ e.getMessage());
-				}
-
-                Runtime.getRuntime().addShutdownHook(new Thread() {
-                    @Override public void run() {
-                        try {
-                            BenchmarkUtils.println("Stop DStatProbe: " + ignite.cluster().localNode().addresses());
-
-                			probeDstat.stop();
-                        } catch (Exception e) {
-                            BenchmarkUtils.println("DStatProbe stop failed "
-                            		+ e.getMessage());
-                        }
-                    }
-                });
-        	}
+        for(final Object p : props.keySet()) {
+            BenchmarkUtils.println("property "
+            		+ p + System.getProperty((String) p));
         }
+
+        if(System.getProperty("yardstick.server" + id) != null) {
+	        for(final String probeClassName : cfg.defaultProbeClassNames()) {
+	        	if(probeClassName.contains("DStatProbe")) {
+	                BenchmarkUtils.println("Start DStatProbe: "
+	                		+ ignite.cluster().localNode().addresses() + " output " + cfg.outputFolder());
+
+	                probeDstat = new DStatProbe();
+
+	                final BenchmarkDriverIgniteNode driver = new BenchmarkDriverIgniteNode();
+	                driver.setUp(cfg);
+
+	                try {
+						probeDstat.start(driver, cfg);
+					} catch (Exception e) {
+		                BenchmarkUtils.println("DStatProbe start failed "
+		                		+ e.getMessage());
+					}
+
+	                Runtime.getRuntime().addShutdownHook(new Thread() {
+	                    @Override public void run() {
+	                        try {
+	                            BenchmarkUtils.println("Stop DStatProbe: server " + id);
+
+	                			probeDstat.stop();
+	                        } catch (Exception e) {
+	                            BenchmarkUtils.println("DStatProbe stop failed "
+	                            		+ e.getMessage());
+	                        }
+	                    }
+	                });
+	        	}
+	        }
+    	}
     }
 
     /**
