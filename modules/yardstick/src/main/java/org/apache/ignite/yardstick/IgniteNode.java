@@ -212,6 +212,19 @@ public class IgniteNode implements BenchmarkServer {
 	                BenchmarkUtils.println("DStatProbe start failed "
 	                		+ e.getMessage());
 				}
+
+                Runtime.getRuntime().addShutdownHook(new Thread() {
+                    @Override public void run() {
+                        try {
+                            BenchmarkUtils.println("Stop DStatProbe: " + ignite.cluster().localNode().addresses());
+
+                			probeDstat.stop();
+                        } catch (Exception e) {
+                            BenchmarkUtils.println("DStatProbe stop failed "
+                            		+ e.getMessage());
+                        }
+                    }
+                });
         	}
         }
     }
@@ -269,17 +282,6 @@ public class IgniteNode implements BenchmarkServer {
 
     /** {@inheritDoc} */
     @Override public void stop() throws Exception {
-    	if(probeDstat != null) {
-            BenchmarkUtils.println("Stop DStatProbe: " + ignite.cluster().localNode().addresses());
-
-    		try {
-				probeDstat.stop();
-			} catch (Exception e) {
-                BenchmarkUtils.println("DStatProbe stop failed "
-                		+ e.getMessage());
-			}
-    	}
-
         Ignition.stopAll(true);
     }
 
