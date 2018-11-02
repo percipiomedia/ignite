@@ -17,9 +17,12 @@
 
 package org.apache.ignite.yardstick;
 
+import static org.apache.ignite.internal.IgniteNodeAttributes.ATTR_MARSHALLER;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCheckedException;
 import org.apache.ignite.IgniteSpring;
@@ -43,10 +46,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.UrlResource;
 import org.yardstickframework.BenchmarkConfiguration;
+import org.yardstickframework.BenchmarkDriverAdapter;
 import org.yardstickframework.BenchmarkServer;
 import org.yardstickframework.BenchmarkUtils;
-
-import static org.apache.ignite.internal.IgniteNodeAttributes.ATTR_MARSHALLER;
+import org.yardstickframework.probes.DStatProbe;
 
 /**
  * Standalone Ignite node.
@@ -57,6 +60,8 @@ public class IgniteNode implements BenchmarkServer {
 
     /** Client mode. */
     private boolean clientMode;
+
+    private DStatProbe probeDstat;
 
     /** */
     public IgniteNode() {
@@ -188,6 +193,27 @@ public class IgniteNode implements BenchmarkServer {
         ignite = IgniteSpring.start(c, appCtx);
 
         BenchmarkUtils.println("Configured marshaller: " + ignite.cluster().localNode().attribute(ATTR_MARSHALLER));
+
+        // launch dstat on each ignite node
+        // TODO only if it is not running driver too
+        for(final String probeClassName : cfg.defaultProbeClassNames()) {
+        	if(probeClassName.contains("DStatProbe")) {
+                BenchmarkUtils.println("Start DStatProbe: "
+                		+ ignite.cluster().localNode().addresses() + " output " + cfg.outputFolder());
+
+                probeDstat = new DStatProbe();
+
+                final BenchmarkDriverIgniteNode driver = new BenchmarkDriverIgniteNode();
+                driver.setUp(cfg);
+
+                try {
+					probeDstat.start(driver, cfg);
+				} catch (Exception e) {
+	                BenchmarkUtils.println("DStatProbe start failed "
+	                		+ e.getMessage());
+				}
+        	}
+        }
     }
 
     /**
@@ -243,6 +269,17 @@ public class IgniteNode implements BenchmarkServer {
 
     /** {@inheritDoc} */
     @Override public void stop() throws Exception {
+    	if(probeDstat != null) {
+            BenchmarkUtils.println("Stop DStatProbe: " + ignite.cluster().localNode().addresses());
+
+    		try {
+				probeDstat.stop();
+			} catch (Exception e) {
+                BenchmarkUtils.println("DStatProbe stop failed "
+                		+ e.getMessage());
+			}
+    	}
+
         Ignition.stopAll(true);
     }
 
@@ -256,5 +293,14 @@ public class IgniteNode implements BenchmarkServer {
      */
     public Ignite ignite() {
         return ignite;
+    }
+
+    static class BenchmarkDriverIgniteNode extends BenchmarkDriverAdapter {
+
+		@Override
+		public boolean test(Map<Object, Object> ctx) throws Exception {
+			// TODO Auto-generated method stub
+			return false;
+		}
     }
 }
