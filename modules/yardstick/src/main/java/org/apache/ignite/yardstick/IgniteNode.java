@@ -21,6 +21,7 @@ import static org.apache.ignite.internal.IgniteNodeAttributes.ATTR_MARSHALLER;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
@@ -50,6 +51,8 @@ import org.yardstickframework.BenchmarkConfiguration;
 import org.yardstickframework.BenchmarkDriverAdapter;
 import org.yardstickframework.BenchmarkServer;
 import org.yardstickframework.BenchmarkUtils;
+import org.yardstickframework.impl.BenchmarkLoader;
+import org.yardstickframework.impl.BenchmarkProbeSet;
 import org.yardstickframework.probes.DStatProbe;
 
 /**
@@ -202,7 +205,7 @@ public class IgniteNode implements BenchmarkServer {
 
         for(final Object p : props.keySet()) {
             BenchmarkUtils.println("property "
-            		+ p + System.getProperty((String) p));
+            		+ p + "=" + System.getProperty((String) p));
         }
 
         if(System.getProperty("yardstick.server" + id) != null) {
@@ -211,13 +214,21 @@ public class IgniteNode implements BenchmarkServer {
 	                BenchmarkUtils.println("Start DStatProbe: "
 	                		+ ignite.cluster().localNode().addresses() + " output " + cfg.outputFolder());
 
+	                final BenchmarkLoader ldr = new BenchmarkLoader();
+
+	                ldr.initialize(cfg);
+
 	                probeDstat = new DStatProbe();
 
 	                final BenchmarkDriverIgniteNode driver = new BenchmarkDriverIgniteNode();
 	                driver.setUp(cfg);
 
+	                final BenchmarkProbeSet probeSet = new BenchmarkProbeSet(driver, cfg, Collections.singleton(probeDstat), ldr);
+
 	                try {
-						probeDstat.start(driver, cfg);
+	                	probeSet.start();
+
+	                	probeSet.onWarmupFinished();
 					} catch (Exception e) {
 		                BenchmarkUtils.println("DStatProbe start failed "
 		                		+ e.getMessage());
@@ -228,7 +239,7 @@ public class IgniteNode implements BenchmarkServer {
 	                        try {
 	                            BenchmarkUtils.println("Stop DStatProbe: server " + id);
 
-	                			probeDstat.stop();
+	                            probeSet.stop();
 	                        } catch (Exception e) {
 	                            BenchmarkUtils.println("DStatProbe stop failed "
 	                            		+ e.getMessage());
