@@ -213,8 +213,7 @@ public class IgniteNode implements BenchmarkServer {
 	        	if(probeClassName.contains("DStatProbe")) {
 	                BenchmarkUtils.println("Start DStatProbe: "
 	                		+ ignite.cluster().localNode().addresses()
-	                		+ " description " + args.description()
-	                		+ " descriptions " + cfg.descriptions()
+	                		+ " description " + cfg.descriptions().get(0)
 	                		+ " output " + cfg.outputFolder());
 
 	                final BenchmarkLoader ldr = new BenchmarkLoader();
@@ -223,7 +222,7 @@ public class IgniteNode implements BenchmarkServer {
 
 	                probeDstat = new DStatProbe();
 
-	                final BenchmarkDriverIgniteNode driver = new BenchmarkDriverIgniteNode(args.description());
+	                final BenchmarkDriverIgniteNode driver = new BenchmarkDriverIgniteNode(cfg.descriptions().get(0));
 	                driver.setUp(cfg);
 
 	                final BenchmarkProbeSet probeSet = new BenchmarkProbeSet(driver, cfg, Collections.singleton(probeDstat), ldr);
