@@ -212,7 +212,10 @@ public class IgniteNode implements BenchmarkServer {
 	        for(final String probeClassName : cfg.defaultProbeClassNames()) {
 	        	if(probeClassName.contains("DStatProbe")) {
 	                BenchmarkUtils.println("Start DStatProbe: "
-	                		+ ignite.cluster().localNode().addresses() + " output " + cfg.outputFolder());
+	                		+ ignite.cluster().localNode().addresses()
+	                		+ " description " + args.description()
+	                		+ " descriptions " + cfg.descriptions()
+	                		+ " output " + cfg.outputFolder());
 
 	                final BenchmarkLoader ldr = new BenchmarkLoader();
 
@@ -220,7 +223,7 @@ public class IgniteNode implements BenchmarkServer {
 
 	                probeDstat = new DStatProbe();
 
-	                final BenchmarkDriverIgniteNode driver = new BenchmarkDriverIgniteNode();
+	                final BenchmarkDriverIgniteNode driver = new BenchmarkDriverIgniteNode(args.description());
 	                driver.setUp(cfg);
 
 	                final BenchmarkProbeSet probeSet = new BenchmarkProbeSet(driver, cfg, Collections.singleton(probeDstat), ldr);
@@ -320,6 +323,19 @@ public class IgniteNode implements BenchmarkServer {
     }
 
     static class BenchmarkDriverIgniteNode extends BenchmarkDriverAdapter {
+
+    	private String desc;
+
+    	public BenchmarkDriverIgniteNode(final String desc) {
+    		super();
+
+    		this.desc = desc;
+    	}
+
+		@Override
+		public String description() {
+			return desc;
+		}
 
 		@Override
 		public boolean test(Map<Object, Object> ctx) throws Exception {
