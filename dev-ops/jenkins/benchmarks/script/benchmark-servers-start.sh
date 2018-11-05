@@ -149,6 +149,17 @@ do
         JVM_OPTS=${JVM_OPTS}" -Xloggc:${LOGS_DIR}/gc-${now0}-server-id${id}-${host_name}-${DS}.log"
     fi
 
+    # set the profile file location
+    if [[ ${JVM_OPTS} == *"-agentlib:hprof"* ]]
+    then
+        probe_file="${OUTPUT_FOLDER#--outputFolder }/probe.hprof"
+        JVM_OPTS="${JVM_OPTS/HPROF_FILE/${probe_file}}"
+    elif [[ ${JVM_OPTS} == *"-XX:FlightRecorderOptions"* ]]
+    then
+        probe_file="${OUTPUT_FOLDER#--outputFolder }/probe.jfr"
+        JVM_OPTS="${JVM_OPTS/JFR_FILE/${probe_jfr}}"
+    fi
+
     export JAVA_HOME=${JAVA_HOME}
     export MAIN_CLASS='org.yardstickframework.BenchmarkServerStartUp'
     export JVM_OPTS="${JVM_OPTS}${SERVER_JVM_OPTS} -Dyardstick.server${id}"
