@@ -120,6 +120,7 @@ results_folder=${SCRIPT_DIR}/../output/$result_dir_name
 LOGS_BASE=${SCRIPT_DIR}/../output/$log_dir_name
 
 export LOGS_BASE
+export RESULTS_FOLDER="${results_folder}"
 
 if [ -z "$RESTART_SERVERS" ]; then
     /bin/bash ${SCRIPT_DIR}/benchmark-servers-start.sh ${CONFIG_INCLUDE}
