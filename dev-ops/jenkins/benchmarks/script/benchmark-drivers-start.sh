@@ -165,6 +165,17 @@ do
         JVM_OPTS=${JVM_OPTS}" -Xloggc:${LOGS_DIR}/gc-${now0}-driver-id${id}-${host_name}-${DS}.log"
     fi
 
+    # set the profile file location
+    if [[ ${JVM_OPTS} == *"-agentlib:hprof"* ]]
+    then
+        probe_file="${results_folder}/probe.hprof"
+        JVM_OPTS="${JVM_OPTS/HPROF_FILE/${probe_file}}"
+    elif [[ ${JVM_OPTS} == *"-XX:FlightRecorderOptions"* ]]
+    then
+        probe_file="${results_folder}/probe.jfr"
+        JVM_OPTS="${JVM_OPTS/JFR_FILE/${probe_jfr}}"
+    fi
+
     export JAVA_HOME=${JAVA_HOME}
     export MAIN_CLASS='org.yardstickframework.BenchmarkDriverStartUp'
     export JVM_OPTS="${JVM_OPTS}${DRIVER_JVM_OPTS} -Dyardstick.driver${id}"
