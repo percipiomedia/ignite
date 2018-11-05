@@ -188,11 +188,15 @@ do
     then
         mkdir -p ${LOGS_DIR}
 
+        mkdir -p ${OUTPUT_FOLDER#--outputFolder }
+
         nohup ${SCRIPT_DIR}/benchmark-bootstrap.sh ${cfg} "--config" ${CONFIG_INCLUDE} "--logsFolder" ${LOGS_DIR} > ${file_log} 2>& 1 &
 
         ${SCRIPT_DIR}/benchmark-wait-driver-up.sh
     else
         ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${REMOTE_USER}"@"${host_name} mkdir -p ${LOGS_DIR}
+
+        ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${REMOTE_USER}"@"${host_name} mkdir -p ${OUTPUT_FOLDER#--outputFolder }
 
         ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${REMOTE_USER}"@"${host_name} \
             "JAVA_HOME='${JAVA_HOME}'" \
