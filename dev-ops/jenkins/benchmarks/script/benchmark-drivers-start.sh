@@ -168,11 +168,11 @@ do
     # set the profile file location
     if [[ ${JVM_OPTS} == *"-agentlib:hprof"* ]]
     then
-        probe_file="${results_folder}/probe.hprof"
+        probe_file="${OUTPUT_FOLDER#--outputFolder }probe.hprof"
         JVM_OPTS="${JVM_OPTS/HPROF_FILE/${probe_file}}"
     elif [[ ${JVM_OPTS} == *"-XX:FlightRecorderOptions"* ]]
     then
-        probe_file="${results_folder}/probe.jfr"
+        probe_file="${OUTPUT_FOLDER#--outputFolder }probe.jfr"
         JVM_OPTS="${JVM_OPTS/JFR_FILE/${probe_jfr}}"
     fi
 
