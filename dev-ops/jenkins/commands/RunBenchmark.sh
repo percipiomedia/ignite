@@ -39,7 +39,7 @@ function usage() {
 function parse() {
   # Option strings
   local SHORT=hvds:
-  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:,runall:,runmlstore:
+  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:,runall:,runmlstore:,hprof:,jfr:
 
   # read the options
   local OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -57,6 +57,8 @@ function parse() {
   STOP_CONTAINERS=true
   RUN_ALL=false
   RUN_MLSTORE=false
+  HPROF=false
+  JFR=false
 
   # extract options and their arguments into variables.
   while true ; do
@@ -95,6 +97,14 @@ function parse() {
         RUN_MLSTORE="$2"
         shift 2
         ;;
+      --hprof )
+        HPROF="$2"
+        shift 2
+        ;;
+      --jfr )
+        JFR="$2"
+        shift 2
+        ;;
       -- )
         shift
         break
@@ -108,6 +118,12 @@ function parse() {
 unset LOG_FILE
 export LOG_FILE=${current_dir}/jira-dev-ops.log
 
+export JVM_HPROF="-agentlib:hprof=heap=all,cpu=samples,monitor=n,format=b,file=HPROF_FILE"
+
+export JVM_FLIGHT_RECORDER="-XX:+UnlockCommercialFeatures \
+-XX:+FlightRecorder \
+-XX:FlightRecorderOptions=defaultrecording=true,disk=true,repository=./tmp,dumponexit=true,dumponexitpath=JFR_FILE"
+
 parse "$@"
 
 # verbose mode
@@ -120,6 +136,14 @@ fi
 if [[ "${DEBUG}" = true ]]; then
   log_info "enable debug/trace mode"
   set -o xtrace
+fi
+
+if [[ "${HPROF}" = true ]]; then
+  log_info "enable hprof profiling"
+  export JVM_PROFILING="${JVM_HPROF}"
+elif [[ "${JFR}" = true ]]; then
+  log_info "enable JFR profiling"
+  export JVM_PROFILING="${JVM_FLIGHT_RECORDER}"
 fi
 
 declare -a node_names=()
@@ -239,6 +263,7 @@ docker run \
         -e "CONFIG_URI=file:///opt/jobcase/config/multicast.discovery.snapshot.service.client.node.config.xml" \
         -e JVM_HEAP_SIZE=${JVM_HEAP_SIZE} \
         -e JVM_METASPACE_SIZE=${JVM_METASPACE_SIZE} \
+        -e JVM_PROFILING=${JVM_PROFILING} \
         --name=${snap_node_name} apacheignite/jobcase-snapshot:2.5.0 \
         --debug --launch ls
 
