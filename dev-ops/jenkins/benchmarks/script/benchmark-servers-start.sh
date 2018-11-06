@@ -157,7 +157,7 @@ do
     elif [[ ${JVM_OPTS} == *"-XX:FlightRecorderOptions"* ]]
     then
         probe_file="${OUTPUT_FOLDER#--outputFolder }/probe.jfr"
-        JVM_OPTS="${JVM_OPTS/JFR_FILE/${probe_jfr}}"
+        JVM_OPTS="${JVM_OPTS/JFR_FILE/${probe_file}}"
     fi
 
     export JAVA_HOME=${JAVA_HOME}
