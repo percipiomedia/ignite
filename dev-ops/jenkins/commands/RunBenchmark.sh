@@ -263,7 +263,7 @@ docker run \
         -e "CONFIG_URI=file:///opt/jobcase/config/multicast.discovery.snapshot.service.client.node.config.xml" \
         -e JVM_HEAP_SIZE=${JVM_HEAP_SIZE} \
         -e JVM_METASPACE_SIZE=${JVM_METASPACE_SIZE} \
-        -e JVM_PROFILING=${JVM_PROFILING} \
+        -e "JVM_PROFILING=${JVM_PROFILING}" \
         --name=${snap_node_name} apacheignite/jobcase-snapshot:2.5.0 \
         --debug --launch ls
 
