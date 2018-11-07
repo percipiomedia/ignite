@@ -73,9 +73,28 @@ if [[ "${RESTART_SERVERS}" != "" ]] && [[ "${RESTART_SERVERS}" != "true" ]]; the
     echo "<"$(date +"%H:%M:%S")"><yardstick> All server restarts are stopped."
 fi
 
+DS=""
+
+id=0
+
 IFS=',' read -ra hosts0 <<< "${SERVER_HOSTS}"
 for host_name in "${hosts0[@]}";
 do
+
+    # Extract description.
+    IFS=' ' read -ra cfg0 <<< "${CONFIG}"
+    for cfg00 in "${cfg0[@]}";
+    do
+        if [[ ${found} == 'true' ]]; then
+            found=""
+            DS=${cfg00}
+        fi
+
+        if [[ ${cfg00} == '-ds' ]] || [[ ${cfg00} == '--descriptions' ]]; then
+            found="true"
+        fi
+    done
+
     if [[ ${host_name} = "127.0.0.1" || ${host_name} = "localhost" ]]
         then
             pkill -9 -f "Dyardstick.server"
@@ -86,7 +105,35 @@ do
 
             result=$(ssh -o PasswordAuthentication=no ${REMOTE_USER}"@"${host_name} pgrep -f "Dyardstick.server" 2>&1)
             exitCode=$?
+
+            # rename benchmark test output folder
+            src_output_folder=$(ssh -o PasswordAuthentication=no ${REMOTE_USER}"@"${host_name} find "${OUTPUT_FOLDER#--outputFolder }" -name "*${DS}" 2>&1)
+            exitCode=$?
+
+            if [ ${exitCode} -eq 0 ]; then
+              echo "src_output_folder [${src_output_folder}]"
+
+              date_time=$(date +"%Y%m%d-%H%M%S")
+
+              dest_output_folder=${OUTPUT_FOLDER#--outputFolder }/${date_time}-server-id${id}-${host_name}-${DS}
+
+              echo "dest_output_folder [${dest_output_folder}]"
+
+              rename_output_folder_res=$(ssh -o PasswordAuthentication=no ${REMOTE_USER}"@"${host_name} mv "${src_output_folder}" "${dest_output_folder}" 2>&1)
+              exitCode=$?
+
+              echo "rename output folder result [${rename_output_folder_res}]"
+
+              # move java flight recorder result
+              result=$(ssh -o PasswordAuthentication=no ${REMOTE_USER}"@"${host_name} mv "${OUTPUT_FOLDER#--outputFolder }/probe.jfr" "${dest_output_folder}" 2>&1)
+              exitCode=$?
+
+              echo "move java flight recorder result [${result}]"
+            fi
         fi
 
-    echo "<"$(date +"%H:%M:%S")"><yardstick> Server is stopped on "${host_name}
+    echo "<"$(date +"%H:%M:%S")"><yardstick> Server is stopped on "${host_name}" with id=${id}"
+
+    id=$((1 + $id))
+
 done

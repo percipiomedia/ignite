@@ -173,6 +173,8 @@ function collect_results()
             if [[ ${DRIVER_HOSTS} == *"$ip"* ]]
             then
                 scp -o StrictHostKeyChecking=no -rq $ip:$results_folder/../../output/$result_dir_name/* $MAIN_DIR/output/$result_dir_name
+
+                # move probe.jfr into benchmark test output folder
             fi
             scp -o StrictHostKeyChecking=no -rq $ip:$LOGS_BASE/../../output/$log_dir_name/* $MAIN_DIR/output/$log_dir_name
 
