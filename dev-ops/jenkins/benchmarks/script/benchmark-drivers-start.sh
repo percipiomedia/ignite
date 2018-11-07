@@ -215,6 +215,20 @@ done
 
 for host_name in "${hosts0[@]}";
 do
+    # Extract description.
+    IFS=' ' read -ra cfg0 <<< "${CONFIG}"
+    for cfg00 in "${cfg0[@]}";
+    do
+        if [[ ${found} == 'true' ]]; then
+            found=""
+            DS=${cfg00}
+        fi
+
+        if [[ ${cfg00} == '-ds' ]] || [[ ${cfg00} == '--descriptions' ]]; then
+            found="true"
+        fi
+    done
+
     if [[ ${host_name} = "127.0.0.1" || ${host_name} = "localhost" ]]
     then
         ${SCRIPT_DIR}/benchmark-wait-driver-finish.sh
@@ -223,6 +237,13 @@ do
         if ((${drvNum} > 1)); then
             touch ${OUTPUT_FOLDER#--outputFolder }"/.multiple-drivers"
         fi
+
+        dest_folder=$(find "${OUTPUT_FOLDER#--outputFolder }" -name "*${DS}" 2>&1)
+
+        echo "dest_folder result [${dest_folder}]"
+
+        # move probe.jfr into benchmark test output folder
+        mv "${OUTPUT_FOLDER#--outputFolder }/probe.jfr" "${dest_folder}"
     else
         ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=no ${REMOTE_USER}"@"${host_name} \
         ${SCRIPT_DIR}/benchmark-wait-driver-finish.sh
