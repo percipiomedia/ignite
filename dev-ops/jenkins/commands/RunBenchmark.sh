@@ -39,7 +39,7 @@ function usage() {
 function parse() {
   # Option strings
   local SHORT=hvds:
-  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:,runall:,runmlstore:,hprof:,jfr:
+  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:,runall:,runmlstore:,hprof:,jfr:,threadcount:
 
   # read the options
   local OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -59,6 +59,7 @@ function parse() {
   RUN_MLSTORE=false
   HPROF=false
   JFR=false
+  THREADCOUNT=64
 
   # extract options and their arguments into variables.
   while true ; do
@@ -103,6 +104,10 @@ function parse() {
         ;;
       --jfr )
         JFR="$2"
+        shift 2
+        ;;
+      --threadcount )
+        THREADCOUNT="$2"
         shift 2
         ;;
       -- )
@@ -240,6 +245,7 @@ sed -e "s/IPLIST/${node_discovery_xml_list}/g" \
 
 if [ ${RUN_MLSTORE} = true ]; then
 	sed -e "s/IPLIST/${server_hosts_prop}/g" \
+	    -e "s/THREADCOUNT/${THREADCOUNT}/g" \
 		${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-mlstore-template.properties > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-mlstore.properties
 elif [ ${RUN_ALL} = true ]; then
 	sed -e "s/IPLIST/${server_hosts_prop}/g" \
