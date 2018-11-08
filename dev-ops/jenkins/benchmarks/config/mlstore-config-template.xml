@@ -14,6 +14,8 @@
 
         <property name="deploymentMode" value="CONTINUOUS"/>
 
+        <property name="stripedPoolSize" value="#{systemEnvironment['IGNITE_STRIPED_POOL_SIZE']}"/>
+
         <property name="dataStorageConfiguration">
             <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
                 <property name="defaultDataRegionConfiguration">
