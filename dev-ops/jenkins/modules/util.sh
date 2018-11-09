@@ -220,3 +220,44 @@ function ec2_decode_authorization_message() {
 		return_result+=("${result}")
 	fi
 }
+
+#
+# It takes command output and converts it to a csv file.
+#
+# argument:
+#  shell command (required)
+#  csv file name (required)
+#
+#
+function create_csv_file() {
+	local shell_command="$1"
+	local csv_file="$2"
+
+	for line in $("${shell_command}")
+	do
+		echo "${line/=/,}" >> "${csv_file}"
+	done
+}
+
+#
+# It converts the content of a csv file into html table definition.
+#
+# argument:
+#  csv file name (required)
+#
+# return: The html result is returned in the array variable ${return_result}.
+#
+function convert_csv_html() {
+	local csv_file="$1"
+
+	unset return_result
+
+	return_result+=("<table>")
+
+	while read INPUT
+	do
+		return_result+=("<tr><td>${INPUT//,/</td><td>}</td></tr>")
+	done < ${csv_file}
+
+	return_result+=("</table>")
+}
