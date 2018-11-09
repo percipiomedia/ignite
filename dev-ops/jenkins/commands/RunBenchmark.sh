@@ -242,7 +242,7 @@ sed -e "s/IPLIST/${node_discovery_xml_list}/g" \
 	${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config-template.xml > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config.xml
 
 sed -e "s/IPLIST/${node_discovery_xml_list}/g" \
-    -e "s/#{systemEnvironment['IGNITE_STRIPED_POOL_SIZE']}/${IGNITE_STRIPED_POOL_SIZE}/g" \
+    -e "s/IGNITE_STRIPED_POOL_SIZE/${IGNITE_STRIPED_POOL_SIZE}/g" \
 	${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config-template.xml > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config.xml
 
 if [ ${RUN_MLSTORE} = true ]; then
