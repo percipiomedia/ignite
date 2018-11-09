@@ -190,7 +190,7 @@ do
         -e "CONFIG_URI=file:///opt/jobcase/config/multicast.discovery.node.config.xml" \
         -e JVM_HEAP_SIZE=${JVM_HEAP_SIZE} \
         -e JVM_METASPACE_SIZE=${JVM_METASPACE_SIZE} \
-        -e IGNITE_STRIPED_POOL_SIZE=${IGNITE_STRIPED_POOL_SIZE} \
+        -e "IGNITE_STRIPED_POOL_SIZE=${IGNITE_STRIPED_POOL_SIZE}" \
         --name=${node_name} apacheignite/jobcase:2.5.0 \
         --debug --launch ls 2>&1)
 	exitCode=$?
@@ -242,6 +242,7 @@ sed -e "s/IPLIST/${node_discovery_xml_list}/g" \
 	${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config-template.xml > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config.xml
 
 sed -e "s/IPLIST/${node_discovery_xml_list}/g" \
+    -e "s/#{systemEnvironment['IGNITE_STRIPED_POOL_SIZE']}/${IGNITE_STRIPED_POOL_SIZE}/g"
 	${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config-template.xml > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config.xml
 
 if [ ${RUN_MLSTORE} = true ]; then
@@ -270,7 +271,7 @@ docker run \
         -e "CONFIG_URI=file:///opt/jobcase/config/multicast.discovery.snapshot.service.client.node.config.xml" \
         -e JVM_HEAP_SIZE=${JVM_HEAP_SIZE} \
         -e JVM_METASPACE_SIZE=${JVM_METASPACE_SIZE} \
-        -e IGNITE_STRIPED_POOL_SIZE=${IGNITE_STRIPED_POOL_SIZE} \
+        -e "IGNITE_STRIPED_POOL_SIZE=${IGNITE_STRIPED_POOL_SIZE}" \
         -e "JVM_PROFILING=${JVM_PROFILING}" \
         --name=${snap_node_name} apacheignite/jobcase-snapshot:2.5.0 \
         --debug --launch ls
@@ -307,6 +308,8 @@ docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/script/benchmark-servers-stop.
 docker exec ${snap_node_name} mkdir -p /root/.ssh
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa ${snap_node_name}:/root/.ssh/
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa.pub ${snap_node_name}:/root/.ssh/
+
+sleep 2s
 
 # execute benchmark
 if [ ${RUN_MLSTORE} = true ]; then
