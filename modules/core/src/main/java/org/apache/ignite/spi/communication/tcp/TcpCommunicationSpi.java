@@ -222,6 +222,8 @@ import static org.apache.ignite.spi.communication.tcp.messages.RecoveryLastRecei
  * <li>Socket write timeout (see {@link #setSocketWriteTimeout(long)})</li>
  * <li>Number of received messages after which acknowledgment is sent (see {@link #setAckSendThreshold(int)})</li>
  * <li>Maximum number of unacknowledged messages (see {@link #setUnacknowledgedMessagesBufferSize(int)})</li>
+ * <li>Filtering of reachable addresses (see {@link #setFilterReachableAddresses(boolean)})</li>
+ * <li>Filters to exclude any node addresses which match (see {@link #setNodeAddressExclusionFilters(Set)})</li>
  * </ul>
  * <h2 class="header">Java Example</h2>
  * TcpCommunicationSpi is used by default and should be explicitly configured
@@ -1117,6 +1119,9 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter implements Communicati
 
     /** {@code FILTER_REACHABLE_ADDRESSES} option value for created sockets. */
     private boolean filterReachableAddresses = DFLT_FILTER_REACHABLE_ADDRESSES;
+    
+    /** Set of regular expressions used to exclude matching node addresses. */
+    private final Set<String> nodeAddressExclusionFilters = new HashSet<>();
 
     /** Number of received messages after which acknowledgment is sent. */
     private int ackSndThreshold = DFLT_ACK_SND_THRESHOLD;
@@ -1733,6 +1738,37 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter implements Communicati
 
         return this;
     }
+    
+    /**
+     * Gets the regular expressions which are used to {@linkplain String#matches(String) filter out}
+     * {@linkplain #nodeAddresses(ClusterNode, boolean) node addresses}. Any address which matches
+     * any of the returned filters is not included in the node addresses for a given
+     * {@linkplain ClusterNode node}. The returned list is unmodifiable.
+     *
+     * @return the set of regular expressions used to filter node addresses
+     */
+    public Set<String> getNodeAddressExclusionFilters() {
+       return this.nodeAddressExclusionFilters;
+    }
+
+    /**
+     * Sets the regular expressions which are used to {@linkplain String#matches(String) filter out}
+     * {@linkplain #nodeAddresses(ClusterNode, boolean) node addresses}.
+     * <p>
+     * If not provided, no node addresses are filtered.
+     *
+     * @param filterReachableAddresses the set of regular expressions used to filter node addresses
+     * @return {@code this} for chaining.
+     */
+    @IgniteSpiConfiguration(optional = true)
+    public TcpCommunicationSpi
+       setNodeAddressExclusionFilters(Set<String> nodeAddressExclusionFilters)
+    {
+       this.nodeAddressExclusionFilters.clear();
+       this.nodeAddressExclusionFilters.addAll(nodeAddressExclusionFilters);
+
+       return this;
+    }   
 
     /**
      * Sets receive buffer size for sockets created or accepted by this SPI.
@@ -3176,6 +3212,30 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter implements Communicati
 
             if (log.isDebugEnabled())
                 log.debug("Addresses to connect for node [rmtNode=" + node.id() + ", addrs=" + addrs + ']');
+        }
+
+        // Apply the configured node address exclusion filters, if any.
+        if(!this.getNodeAddressExclusionFilters().isEmpty()) {
+           final LinkedHashSet<InetSocketAddress> filteredAddrs = new LinkedHashSet<>();
+           for (final InetSocketAddress addr : addrs) {
+              for (final String filter : this.getNodeAddressExclusionFilters()) {
+                 if (addr.getAddress().getHostAddress().matches(filter)) {
+                    break;
+                 }
+                 filteredAddrs.add(addr);
+              }
+           }
+   
+           if (filteredAddrs.isEmpty())
+              throw new IgniteCheckedException(
+                 "Failed to send message to the destination node. Node doesn't have any allowable " +
+                    "TCP communication addresses or mapped external addresses (all were filtered out). " +
+                    "Check configuration and make sure that you use the same communication SPI on all nodes. " +
+                    "Remote node id: " + node.id() + ". All possible addresses: " + addrs);
+   
+           addrs = filteredAddrs;
+           if (this.log.isDebugEnabled())
+              this.log.debug("Addresses to connect for node [rmtNode=" + node.id() + ", addrs=" + addrs + ']');
         }
 
         return addrs;
