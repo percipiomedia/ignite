@@ -17,8 +17,11 @@
 
 package org.apache.ignite.spi.communication.tcp;
 
+import static org.mockito.Matchers.booleanThat;
+
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -108,6 +111,15 @@ public class GridTcpCommunicationSpiConfigSelfTest extends GridSpiAbstractConfig
               }
            }
            Assert.assertFalse(containsLocalAddress);
+           
+           // Try to configure an invalid filter.
+           boolean filterInvalid = false;
+           try {
+              spi.setNodeAddressExclusionFilters(Sets.newHashSet("["));
+           } catch (PatternSyntaxException e) {
+              filterInvalid = true;
+           }
+           Assert.assertTrue(filterInvalid);
        }
        finally {
            stopAllGrids();
