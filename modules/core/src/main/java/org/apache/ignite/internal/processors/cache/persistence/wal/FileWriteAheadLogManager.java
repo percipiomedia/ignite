@@ -267,7 +267,7 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
      * Maximum number of allowed segments without checkpoint. If we have their more checkpoint should be triggered.
      * It is simple way to calculate WAL size without checkpoint instead fair WAL size calculating.
      */
-    private final long maxSegCountWithoutCheckpoint;
+    private long maxSegCountWithoutCheckpoint;
 
     /** Size of wal archive since which removing of old archive should be started */
     private final long allowedThresholdWalArchiveSize;
@@ -316,7 +316,7 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
     private final SegmentFileInputFactory segmentFileInputFactory;
 
     /** Holder of actual information of latest manipulation on WAL segments. */
-    private final SegmentAware segmentAware;
+    private volatile SegmentAware segmentAware;
 
     /** Updater for {@link #currHnd}, used for verify there are no concurrent update for current log segment handle */
     private static final AtomicReferenceFieldUpdater<FileWriteAheadLogManager, FileWriteHandle> CURR_HND_UPD =
@@ -408,14 +408,10 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
         segmentFileInputFactory = new SimpleSegmentFileInputFactory();
         walAutoArchiveAfterInactivity = dsCfg.getWalAutoArchiveAfterInactivity();
 
-        maxSegCountWithoutCheckpoint =
-            (long)((dsCfg.getMaxWalArchiveSize() * CHECKPOINT_TRIGGER_ARCHIVE_SIZE_PERCENTAGE) / dsCfg.getWalSegmentSize());
-
         allowedThresholdWalArchiveSize = (long)(dsCfg.getMaxWalArchiveSize() * THRESHOLD_WAL_ARCHIVE_SIZE_PERCENTAGE);
 
         evt = ctx.event();
         failureProcessor = ctx.failure();
-        segmentAware = new SegmentAware(dsCfg.getWalSegments());
     }
 
     /**
@@ -430,6 +426,10 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
     /** {@inheritDoc} */
     @Override public void start0() throws IgniteCheckedException {
         if (!cctx.kernalContext().clientNode()) {
+            maxSegCountWithoutCheckpoint =
+                (long)((U.adjustedWalHistorySize(dsCfg, log) * CHECKPOINT_TRIGGER_ARCHIVE_SIZE_PERCENTAGE)
+                    / dsCfg.getWalSegmentSize());
+
             final PdsFolderSettings resolveFolders = cctx.kernalContext().pdsFolderResolver().resolveFolders();
 
             checkWalConfiguration();
@@ -472,6 +472,8 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
                 });
 
             IgniteBiTuple<Long, Long> tup = scanMinMaxArchiveIndices();
+
+            segmentAware = new SegmentAware(dsCfg.getWalSegments());
 
             segmentAware.lastTruncatedArchiveIdx(tup == null ? -1 : tup.get1() - 1);
 
@@ -1633,18 +1635,17 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
      * the absolute index of last archived segment is denoted by A and the absolute index of next segment we want to
      * write is denoted by W, then we can allow write to S(W) if W - A <= walSegments. <br>
      *
-     * Monitor of current object is used for notify on: <ul> <li>exception occurred ({@link
-     * FileArchiver#cleanErr}!=null)</li> <li>stopping thread ({@link FileArchiver#stopped}==true)</li> <li>current file
-     * index changed </li> <li>last archived file index was changed ({@link
-     * </li> <li>some WAL index was removed from map</li>
+     * Monitor of current object is used for notify on: <ul>
+     *     <li>exception occurred ({@link FileArchiver#cleanErr}!=null)</li>
+     *     <li>stopping thread ({@link FileArchiver#isCancelled==true})</li>
+     *     <li>current file index changed </li>
+     *     <li>last archived file index was changed</li>
+     *     <li>some WAL index was removed from map</li>
      * </ul>
      */
     private class FileArchiver extends GridWorker {
         /** Exception which occurred during initial creation of files or during archiving WAL segment */
         private StorageException cleanErr;
-
-        /** current thread stopping advice */
-        private volatile boolean stopped;
 
         /** Formatted index. */
         private int formatted;
@@ -1664,7 +1665,7 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
          */
         private void shutdown() throws IgniteInterruptedCheckedException {
             synchronized (this) {
-                stopped = true;
+                isCancelled = true;
 
                 notifyAll();
             }
@@ -1701,13 +1702,15 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
 
             try {
                 blockingSectionBegin();
+
                 try {
                     segmentAware.awaitSegment(0);//wait for init at least one work segments.
                 }
                 finally {
                     blockingSectionEnd();
                 }
-                while (!Thread.currentThread().isInterrupted() && !stopped) {
+
+                while (!Thread.currentThread().isInterrupted() && !isCancelled()) {
                     long toArchive;
 
                     blockingSectionBegin();
@@ -1718,7 +1721,8 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
                     finally {
                         blockingSectionEnd();
                     }
-                    if (stopped)
+
+                    if (isCancelled())
                         break;
 
                     SegmentArchiveResult res;
@@ -1756,14 +1760,14 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
                 Thread.currentThread().interrupt();
 
                 synchronized (this) {
-                    stopped = true;
+                    isCancelled = true;
                 }
             }
             catch (Throwable t) {
                 err = t;
             }
             finally {
-                if (err == null && !stopped)
+                if (err == null && !isCancelled())
                     err = new IllegalStateException("Worker " + name() + " is terminated unexpectedly");
 
                 if (err instanceof OutOfMemoryError)
@@ -1877,7 +1881,7 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
          *
          */
         private boolean checkStop() {
-            return stopped;
+            return isCancelled();
         }
 
         /**
@@ -2355,18 +2359,22 @@ public class FileWriteAheadLogManager extends GridCacheSharedManagerAdapter impl
         /** I/O interface for read/write operations with file */
         SegmentIO fileIO;
 
+        /** Segment idx corresponded to fileIo*/
+        final long segmentIdx;
+
         /**
-         * @param fileIO I/O interface for read/write operations of FileHandle.         *
+         * @param fileIO I/O interface for read/write operations of FileHandle.
          */
-        private FileHandle(SegmentIO fileIO) {
+        private FileHandle(@NotNull SegmentIO fileIO) {
             this.fileIO = fileIO;
+            segmentIdx = fileIO.getSegmentId();
         }
 
         /**
          * @return Absolute WAL segment file index (incremental counter).
          */
         public long getSegmentId(){
-            return fileIO.getSegmentId();
+            return segmentIdx;
         }
     }
 

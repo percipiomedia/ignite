@@ -193,7 +193,19 @@ public abstract class WALRecord {
         MVCC_DATA_PAGE_TX_STATE_HINT_UPDATED_RECORD,
 
         /** */
-        MVCC_DATA_PAGE_NEW_TX_STATE_HINT_UPDATED_RECORD;
+        MVCC_DATA_PAGE_NEW_TX_STATE_HINT_UPDATED_RECORD,
+
+        /** Encrypted WAL-record. */
+        ENCRYPTED_RECORD,
+
+        /** Ecnrypted data record. */
+        ENCRYPTED_DATA_RECORD,
+
+        /** Mvcc data record. */
+        MVCC_DATA_RECORD,
+
+        /** Mvcc Tx state change record. */
+        MVCC_TX_RECORD;
 
         /** */
         private static final RecordType[] VALS = RecordType.values();

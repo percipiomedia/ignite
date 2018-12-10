@@ -205,7 +205,7 @@ public class GridClusterStateProcessor extends GridProcessorAdapter implements I
                     return transitionRes;
                 }
                 else
-                    return false;
+                    return globalState.baselineChanged();
             }
         }
         else
@@ -1159,6 +1159,8 @@ public class GridClusterStateProcessor extends GridProcessorAdapter implements I
                     ctx.igfs().onActivate(ctx);
 
                     ctx.task().onActivate(ctx);
+
+                    ctx.encryption().onActivate(ctx);
 
                     if (log.isInfoEnabled())
                         log.info("Successfully performed final activation steps [nodeId="

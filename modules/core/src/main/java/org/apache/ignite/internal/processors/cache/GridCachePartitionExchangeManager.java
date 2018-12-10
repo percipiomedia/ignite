@@ -101,6 +101,7 @@ import org.apache.ignite.internal.util.GridListSet;
 import org.apache.ignite.internal.util.GridPartitionStateMap;
 import org.apache.ignite.internal.util.IgniteUtils;
 import org.apache.ignite.internal.util.future.GridCompoundFuture;
+import org.apache.ignite.internal.util.future.GridFinishedFuture;
 import org.apache.ignite.internal.util.future.GridFutureAdapter;
 import org.apache.ignite.internal.util.tostring.GridToStringExclude;
 import org.apache.ignite.internal.util.tostring.GridToStringInclude;
@@ -898,7 +899,7 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
         while (true) {
             GridDhtTopologyFuture cur = lastFinishedFut.get();
 
-            if (cur == null || fut.topologyVersion().compareTo(cur.topologyVersion()) > 0) {
+            if (fut.topologyVersion() != null && (cur == null || fut.topologyVersion().compareTo(cur.topologyVersion()) > 0)) {
                 if (lastFinishedFut.compareAndSet(cur, fut))
                     break;
             }
@@ -912,23 +913,13 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
      * @return Future or {@code null} is future is already completed.
      */
     @Nullable public IgniteInternalFuture<AffinityTopologyVersion> affinityReadyFuture(AffinityTopologyVersion ver) {
-        GridDhtPartitionsExchangeFuture lastInitializedFut0 = lastInitializedFut;
-
-        if (lastInitializedFut0 != null && lastInitializedFut0.initialVersion().compareTo(ver) == 0) {
-            if (log.isTraceEnabled())
-                log.trace("Return lastInitializedFut for topology ready future " +
-                    "[ver=" + ver + ", fut=" + lastInitializedFut0 + ']');
-
-            return lastInitializedFut0;
-        }
-
         AffinityTopologyVersion topVer = exchFuts.readyTopVer();
 
         if (topVer.compareTo(ver) >= 0) {
             if (log.isTraceEnabled())
                 log.trace("Return finished future for topology ready future [ver=" + ver + ", topVer=" + topVer + ']');
 
-            return null;
+            return new GridFinishedFuture<>(topVer);
         }
 
         GridFutureAdapter<AffinityTopologyVersion> fut = F.addIfAbsent(readyFuts, ver,
@@ -1109,8 +1100,12 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
 
         m.topologyVersion(msgTopVer);
 
-        if (log.isInfoEnabled())
-            log.info("Full Message creating for " + msgTopVer + " performed in " + (System.currentTimeMillis() - time) + " ms.");
+        if (log.isInfoEnabled()) {
+            long latency = System.currentTimeMillis() - time;
+
+            if (latency > 100 || log.isDebugEnabled())
+                log.info("Full Message creating for " + msgTopVer + " performed in " + latency + " ms.");
+        }
 
         if (log.isTraceEnabled())
             log.trace("Sending all partitions [nodeIds=" + U.nodeIds(nodes) + ", msg=" + m + ']');
@@ -1331,7 +1326,7 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
                     grp.affinity().similarAffinityKey());
 
                 if (sndCounters) {
-                    CachePartitionPartialCountersMap cntrsMap = grp.topology().localUpdateCounters(true);
+                    CachePartitionPartialCountersMap cntrsMap = grp.topology().localUpdateCounters(true, true);
 
                     m.addPartitionUpdateCounters(grp.groupId(),
                         newCntrMap ? cntrsMap : CachePartitionPartialCountersMap.toCountersMap(cntrsMap));
@@ -1355,7 +1350,7 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
                 top.similarAffinityKey());
 
             if (sndCounters) {
-                CachePartitionPartialCountersMap cntrsMap = top.localUpdateCounters(true);
+                CachePartitionPartialCountersMap cntrsMap = top.localUpdateCounters(true, true);
 
                 m.addPartitionUpdateCounters(top.groupId(),
                     newCntrMap ? cntrsMap : CachePartitionPartialCountersMap.toCountersMap(cntrsMap));
@@ -2263,13 +2258,19 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
     }
 
     /**
+     * Invokes {@link GridWorker#updateHeartbeat()} for exchange worker.
+     */
+    public void exchangerUpdateHeartbeat() {
+        exchWorker.updateHeartbeat();
+    }
+
+    /**
      * Invokes {@link GridWorker#blockingSectionBegin()} for exchange worker.
      * Should be called from exchange worker thread.
      */
     public void exchangerBlockingSectionBegin() {
-        assert exchWorker != null && Thread.currentThread() == exchWorker.runner();
-
-        exchWorker.blockingSectionBegin();
+        if (currentThreadIsExchanger())
+            exchWorker.blockingSectionBegin();
     }
 
     /**
@@ -2277,9 +2278,13 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
      * Should be called from exchange worker thread.
      */
     public void exchangerBlockingSectionEnd() {
-        assert exchWorker != null && Thread.currentThread() == exchWorker.runner();
+        if (currentThreadIsExchanger())
+            exchWorker.blockingSectionEnd();
+    }
 
-        exchWorker.blockingSectionEnd();
+    /** */
+    private boolean currentThreadIsExchanger() {
+        return exchWorker != null && Thread.currentThread() == exchWorker.runner();
     }
 
     /**
@@ -2548,6 +2553,9 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
                     cctx.kernalContext().failure().process(new FailureContext(CRITICAL_ERROR, err));
                 else if (err != null)
                     cctx.kernalContext().failure().process(new FailureContext(SYSTEM_WORKER_TERMINATION, err));
+                else
+                    // In case of reconnectNeeded == true, prevent general-case termination handling.
+                    cancel();
             }
         }
 
@@ -2681,7 +2689,7 @@ public class GridCachePartitionExchangeManager<K, V> extends GridCacheSharedMana
                                         ? Math.min(curTimeout, dumpTimeout)
                                         : dumpTimeout;
 
-                                    blockingSectionEnd();
+                                    blockingSectionBegin();
 
                                     try {
                                         resVer = exchFut.get(exchTimeout, TimeUnit.MILLISECONDS);

@@ -84,11 +84,7 @@ public class FailureProcessor extends GridProcessorAdapter {
      * @return Default {@link FailureHandler} implementation.
      */
     protected FailureHandler getDefaultFailureHandler() {
-        FailureHandler hnd = new StopNodeOrHaltFailureHandler();
-
-        hnd.setIgnoredFailureTypes(Collections.singleton(SYSTEM_WORKER_BLOCKED));
-
-        return hnd;
+        return new StopNodeOrHaltFailureHandler();
     }
 
     /**
@@ -102,9 +98,10 @@ public class FailureProcessor extends GridProcessorAdapter {
      * Processes failure accordingly to configured {@link FailureHandler}.
      *
      * @param failureCtx Failure context.
+     * @return {@code True} If this very call led to Ignite node invalidation.
      */
-    public void process(FailureContext failureCtx) {
-        process(failureCtx, hnd);
+    public boolean process(FailureContext failureCtx) {
+        return process(failureCtx, hnd);
     }
 
     /**
@@ -112,13 +109,14 @@ public class FailureProcessor extends GridProcessorAdapter {
      *
      * @param failureCtx Failure context.
      * @param hnd Failure handler.
+     * @return {@code True} If this very call led to Ignite node invalidation.
      */
-    public synchronized void process(FailureContext failureCtx, FailureHandler hnd) {
+    public synchronized boolean process(FailureContext failureCtx, FailureHandler hnd) {
         assert failureCtx != null;
         assert hnd != null;
 
         if (this.failureCtx != null) // Node already terminating, no reason to process more errors.
-            return;
+            return false;
 
         U.error(ignite.log(), "Critical system error detected. Will be handled accordingly to configured handler " +
             "[hnd=" + hnd + ", failureCtx=" + failureCtx + ']', failureCtx.error());
@@ -136,5 +134,7 @@ public class FailureProcessor extends GridProcessorAdapter {
 
             log.error("Ignite node is in invalid state due to a critical failure.");
         }
+
+        return invalidated;
     }
 }

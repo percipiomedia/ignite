@@ -408,7 +408,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
         ClientCacheChangeDummyDiscoveryMessage msg,
         boolean crd,
         AffinityTopologyVersion topVer,
-        DiscoCache discoCache) {
+        DiscoCache discoCache
+    ) {
         Map<String, DynamicCacheChangeRequest> startReqs = msg.startRequests();
 
         if (startReqs == null)
@@ -434,11 +435,13 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
 
                 DynamicCacheChangeRequest startReq = startReqs.get(desc.cacheName());
 
-                cctx.cache().prepareCacheStart(desc.cacheConfiguration(),
+                cctx.cache().prepareCacheStart(
+                    desc.cacheConfiguration(),
                     desc,
                     startReq.nearCacheConfiguration(),
                     topVer,
-                    startReq.disabledAfterStart());
+                    startReq.disabledAfterStart()
+                );
 
                 startedInfos.put(desc.cacheId(), startReq.nearCacheConfiguration() != null);
 
@@ -564,6 +567,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
 
         cctx.cache().initCacheProxies(topVer, null);
 
+        startReqs.keySet().forEach(req -> cctx.cache().completeProxyInitialize(req));
+
         cctx.cache().completeClientCacheChangeFuture(msg.requestId(), null);
 
         return startedInfos;
@@ -578,7 +583,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
     private Set<Integer> processCacheCloseRequests(
         ClientCacheChangeDummyDiscoveryMessage msg,
         boolean crd,
-        AffinityTopologyVersion topVer) {
+        AffinityTopologyVersion topVer
+    ) {
         Set<String> cachesToClose = msg.cachesToClose();
 
         if (cachesToClose == null)
@@ -720,6 +726,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                     return;
 
                 aff.clientEventTopologyChange(evts.lastEvent(), evts.topologyVersion());
+
+                cctx.exchange().exchangerUpdateHeartbeat();
             }
         });
     }
@@ -869,7 +877,7 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                 assert cctx.cacheContext(cacheDesc.cacheId()) == null
                     : "Starting cache has not null context: " + cacheDesc.cacheName();
 
-                IgniteCacheProxyImpl cacheProxy = (IgniteCacheProxyImpl) cctx.cache().jcacheProxy(req.cacheName());
+                IgniteCacheProxyImpl cacheProxy = cctx.cache().jcacheProxy(req.cacheName(), false);
 
                 // If it has proxy then try to start it
                 if (cacheProxy != null) {
@@ -887,11 +895,13 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
 
             try {
                 if (startCache) {
-                    cctx.cache().prepareCacheStart(req.startCacheConfiguration(),
+                    cctx.cache().prepareCacheStart(
+                        req.startCacheConfiguration(),
                         cacheDesc,
                         nearCfg,
                         evts.topologyVersion(),
-                        req.disabledAfterStart());
+                        req.disabledAfterStart()
+                    );
 
                     if (fut.cacheAddedOnExchange(cacheDesc.cacheId(), cacheDesc.receivedFrom())) {
                         if (fut.events().discoveryCache().cacheGroupAffinityNodes(cacheDesc.groupId()).isEmpty())
@@ -1120,6 +1130,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                 }
                 else
                     aff.clientEventTopologyChange(exchFut.firstEvent(), topVer);
+
+                cctx.exchange().exchangerUpdateHeartbeat();
             }
         });
     }
@@ -1140,6 +1152,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                     AffinityTopologyVersion topVer = fut.initialVersion();
 
                     aff.clientEventTopologyChange(fut.firstEvent(), topVer);
+
+                    cctx.exchange().exchangerUpdateHeartbeat();
                 }
             });
         }
@@ -1273,16 +1287,22 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                 @Override public void applyx(CacheGroupDescriptor desc) throws IgniteCheckedException {
                     CacheGroupHolder cache = groupHolder(fut.initialVersion(), desc);
 
-                    if (cache.affinity().lastVersion().equals(AffinityTopologyVersion.NONE))
+                    if (cache.affinity().lastVersion().equals(AffinityTopologyVersion.NONE)) {
                         calculateAndInit(fut.events(), cache.affinity(), fut.initialVersion());
+
+                        cctx.exchange().exchangerUpdateHeartbeat();
+                    }
                 }
             });
         }
         else {
             forAllCacheGroups(false, new IgniteInClosureX<GridAffinityAssignmentCache>() {
                 @Override public void applyx(GridAffinityAssignmentCache aff) throws IgniteCheckedException {
-                    if (aff.lastVersion().equals(AffinityTopologyVersion.NONE))
+                    if (aff.lastVersion().equals(AffinityTopologyVersion.NONE)) {
                         initAffinity(cachesRegistry.group(aff.groupId()), aff, fut);
+
+                        cctx.exchange().exchangerUpdateHeartbeat();
+                    }
                 }
             });
         }
@@ -1612,6 +1632,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                         CacheGroupHolder grpHolder = groupHolder(topVer, desc);
 
                         calculateAndInit(fut.events(), grpHolder.affinity(), topVer);
+
+                        cctx.exchange().exchangerUpdateHeartbeat();
                     }
                 });
             }
@@ -1741,6 +1763,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                         calculateAndInit(fut.events(), grp.affinity(), topVer);
                 }
             }
+
+            cctx.exchange().exchangerUpdateHeartbeat();
         }
 
         for (int i = 0; i < fetchFuts.size(); i++) {
@@ -1754,6 +1778,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                 fut.events().discoveryCache(),
                 cctx.cache().cacheGroup(grpId).affinity(),
                 fetchFut);
+
+            cctx.exchange().exchangerUpdateHeartbeat();
         }
     }
 
@@ -1824,6 +1850,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                     CacheGroupHolder cache = groupHolder(fut.initialVersion(), desc);
 
                     cache.aff.calculate(fut.initialVersion(), fut.events(), fut.events().discoveryCache());
+
+                    cctx.exchange().exchangerUpdateHeartbeat();
                 }
             });
         }
@@ -1831,6 +1859,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
             forAllCacheGroups(false, new IgniteInClosureX<GridAffinityAssignmentCache>() {
                 @Override public void applyx(GridAffinityAssignmentCache aff) throws IgniteCheckedException {
                     aff.calculate(fut.initialVersion(), fut.events(), fut.events().discoveryCache());
+
+                    cctx.exchange().exchangerUpdateHeartbeat();
                 }
             });
         }
@@ -1927,6 +1957,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                                 aff.calculate(topVer, fut.events(), fut.events().discoveryCache());
 
                                 affFut.onDone(topVer);
+
+                                cctx.exchange().exchangerUpdateHeartbeat();
                             }
                         });
 
@@ -1949,6 +1981,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                 CacheGroupHolder old = grpHolders.put(grpHolder.groupId(), grpHolder);
 
                 assert old == null : old;
+
+                cctx.exchange().exchangerUpdateHeartbeat();
             }
         });
 
@@ -2027,6 +2061,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                     null,
                     latePrimary,
                     affCache);
+
+                cctx.exchange().exchangerUpdateHeartbeat();
             }
 
             return null;
@@ -2062,6 +2098,8 @@ public class CacheAffinitySharedManager<K, V> extends GridCacheSharedManagerAdap
                         for (GridDhtPartitionMap map0 : map.values())
                             cache.topology(fut.context().events().discoveryCache()).update(fut.exchangeId(), map0, true);
                     }
+
+                    cctx.exchange().exchangerUpdateHeartbeat();
                 }
             });
 
