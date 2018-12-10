@@ -60,18 +60,6 @@ public class NodeAddressFilterTcpCommunicationSpi extends TcpCommunicationSpi {
    }
 
    /**
-    * Returns the regular expressions which are used to {@linkplain String#matches(String) filter
-    * out} node addresses. Any address which matches any of the returned filters is not included in
-    * the {@link #nodeAddresses(ClusterNode, boolean) node addresses} for a given
-    * {@linkplain ClusterNode node}. The returned list is unmodifiable.
-    *
-    * @post return.stream().allMatch(f -> !f.isEmpty())
-    */
-   public Set<String> getNodeAddressExclusionFilters() {
-      return this.nodeAddressExclusionFilters;
-   }
-
-   /**
     * Returns the addresses used to communicate with the given node. Addresses are returned in order
     * of preference for connection.
     *
@@ -174,7 +162,7 @@ public class NodeAddressFilterTcpCommunicationSpi extends TcpCommunicationSpi {
       final Iterator<InetSocketAddress> addressIterator = addresses.iterator();
       while (addressIterator.hasNext()) {
          final InetSocketAddress address = addressIterator.next();
-         for (final String filter : this.getNodeAddressExclusionFilters()) {
+         for (final String filter : this.nodeAddressExclusionFilters) {
             if (address.getAddress().getHostAddress().matches(filter)) {
                addressIterator.remove();
                break;

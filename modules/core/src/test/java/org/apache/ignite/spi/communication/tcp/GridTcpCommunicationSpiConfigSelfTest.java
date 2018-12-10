@@ -17,9 +17,19 @@
 
 package org.apache.ignite.spi.communication.tcp;
 
+import static org.mockito.Matchers.booleanThat;
+
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.regex.PatternSyntaxException;
+
+import org.apache.ignite.Ignite;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.testframework.junits.spi.GridSpiAbstractConfigTest;
 import org.apache.ignite.testframework.junits.spi.GridSpiTest;
+import org.junit.Assert;
+
+import com.google.common.collect.Sets;
 
 /**
  * TCP communication SPI config test.
@@ -68,4 +78,51 @@ public class GridTcpCommunicationSpiConfigSelfTest extends GridSpiAbstractConfig
             stopAllGrids();
         }
     }
+    
+    public void testNodeAddressExclusionFilters() throws Exception {
+       try {
+           IgniteConfiguration cfg = getConfiguration();
+
+           TcpCommunicationSpi spi = new TcpCommunicationSpi();
+           cfg.setCommunicationSpi(spi);
+
+           Ignite ignite = startGrid(cfg.getIgniteInstanceName(), cfg);
+           
+
+           // Validate the node addresses for the only node contains the local node address.
+           Collection<InetSocketAddress> unfilteredAddresses = spi.nodeAddresses(ignite.cluster().node(), false);
+           boolean containsLocalAddress = false;      
+           for(InetSocketAddress unfilteredAddress : unfilteredAddresses) {
+              if(unfilteredAddress.getAddress().getHostAddress().equals("127.0.0.1")) {
+                 containsLocalAddress = true;
+                 break;
+              }
+           }
+           Assert.assertTrue(containsLocalAddress);
+           
+           // Tell the SPI to filter the local address and make sure it isn't returned by nodeAddress().
+           spi.setNodeAddressExclusionFilters(Sets.newHashSet("127[.]0[.]0[.]1"));
+           containsLocalAddress = false;      
+           Collection<InetSocketAddress> filteredAddresses = spi.nodeAddresses(ignite.cluster().node(), false);   
+           for(InetSocketAddress filteredAddress : filteredAddresses) {
+              if(filteredAddress.getAddress().getHostAddress().equals("127.0.0.1")) {
+                 containsLocalAddress = true;
+                 break;
+              }
+           }
+           Assert.assertFalse(containsLocalAddress);
+           
+           // Try to configure an invalid filter.
+           boolean filterInvalid = false;
+           try {
+              spi.setNodeAddressExclusionFilters(Sets.newHashSet("["));
+           } catch (PatternSyntaxException e) {
+              filterInvalid = true;
+           }
+           Assert.assertTrue(filterInvalid);
+       }
+       finally {
+           stopAllGrids();
+       }
+   }
 }
