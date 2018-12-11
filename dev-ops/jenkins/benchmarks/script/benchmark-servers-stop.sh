@@ -107,6 +107,7 @@ do
             exitCode=$?
 
             # rename benchmark test output folder
+            echo "[${OUTPUT_FOLDER}] [${DS}]"
             src_output_folder=$(ssh -o PasswordAuthentication=no ${REMOTE_USER}"@"${host_name} find "${OUTPUT_FOLDER#--outputFolder }" -name "*${DS}" 2>&1)
             exitCode=$?
 
