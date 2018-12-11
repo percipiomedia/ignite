@@ -1,0 +1,18 @@
+{
+	"type": "page",
+	"title": "$PAGE_TITLE",
+	"ancestors": [
+		{
+			"id": "$PARENT_PAGE_ID"
+		}
+	],
+	"space": {
+		"key": "$SPACE_KEY"
+	},
+	"body": {
+		"storage": {
+			"value": "$HTML_CONTENT",
+			"representation": "storage"
+		}
+	}
+}
