@@ -134,10 +134,11 @@ findAvailableJmxPort() {
     # This enables remote unsecure access to JConsole or VisualVM.
     #
     # ADD YOUR ADDITIONAL PARAMETERS/OPTIONS HERE
+    # Newer Java versions (1.8.0_121+) allow the RMI port to be the same port.
     #
     if [ -n "$JMX_PORT" ]; then
-        JMX_MON="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=${JMX_PORT} \
-            -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+        JMX_MON="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=${JMX_PORT} -Dcom.sun.management.jmxremote.rmi.port=${JMX_PORT} \
+                 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
     else
         # If JMX port wasn't found do not initialize JMX.
         echo "$0, WARN: Failed to resolve JMX host (JMX will be disabled): $HOSTNAME"
