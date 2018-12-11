@@ -273,7 +273,7 @@ docker run \
         -e JVM_METASPACE_SIZE=${JVM_METASPACE_SIZE} \
         -e "IGNITE_STRIPED_POOL_SIZE=${IGNITE_STRIPED_POOL_SIZE}" \
         -e "JVM_PROFILING=${JVM_PROFILING}" \
-        --name=${snap_node_name} apacheignite/jobcase-snapshot:2.7.0 \
+        --name=${snap_node_name} apacheignite/jobcase:2.7.0 \
         --debug --launch ls
 
 # get IGNITE_HOME env
