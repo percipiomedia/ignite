@@ -282,7 +282,7 @@ ignite_home=$(docker exec ${snap_node_name} printenv IGNITE_HOME)
 # benchmark-wait-driver-up.sh requires bc app
 # and add dstat for benchmark data
 docker exec ${snap_node_name} apt-get update
-docker exec ${snap_node_name} apt-get install bc dstat -y
+docker exec ${snap_node_name} apt-get install bc dstat ssh -y
 
 if [ ${RUN_MLSTORE} = true ]; then
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
