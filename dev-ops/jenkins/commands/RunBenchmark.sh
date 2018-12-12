@@ -309,6 +309,9 @@ docker exec ${snap_node_name} mkdir -p /root/.ssh
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa ${snap_node_name}:/root/.ssh/
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa.pub ${snap_node_name}:/root/.ssh/
 
+# add jmxterm
+docker cp ${WORKSPACE}/dev-ops/jenkins/tools/jmxterm-1.0.0-uber.jar ${snap_node_name}:${ignite_home}/benchmarks/bin/
+
 sleep 2s
 
 # execute benchmark
