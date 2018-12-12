@@ -39,7 +39,7 @@ function usage() {
 function parse() {
   # Option strings
   local SHORT=hvds:
-  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:,runall:,runmlstore:,hprof:,jfr:,threadcount:
+  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:,runall:,runmlstore:,hprof:,jfr:,threadcount:,run:
 
   # read the options
   local OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -60,6 +60,8 @@ function parse() {
   HPROF=false
   JFR=false
   THREADCOUNT=64
+  RUN=false
+  RUN_PROP_FILE=''
 
   # extract options and their arguments into variables.
   while true ; do
@@ -88,6 +90,10 @@ function parse() {
         ;;
       --stop )
         STOP_CONTAINERS="$2"
+        shift 2
+        ;;
+      --run )
+        RUN=true; RUN_PROP_FILE="$2"
         shift 2
         ;;
       --runall )
@@ -249,6 +255,10 @@ if [ ${RUN_MLSTORE} = true ]; then
 	sed -e "s/IPLIST/${server_hosts_prop}/g" \
 	    -e "s/THREADCOUNT/${THREADCOUNT}/g" \
 		${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-mlstore-template.properties > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-mlstore.properties
+elif [ ${RUN} = true ]; then
+	sed -e "s/IPLIST/${server_hosts_prop}/g" \
+	    -e "s/THREADCOUNT/${THREADCOUNT}/g" \
+		${WORKSPACE}/dev-ops/jenkins/benchmarks/config/${RUN_PROP_FILE} > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote.properties
 elif [ ${RUN_ALL} = true ]; then
 	sed -e "s/IPLIST/${server_hosts_prop}/g" \
 		${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-all-template.properties > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-all.properties
@@ -292,6 +302,8 @@ docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config.xm
 
 if [ ${RUN_MLSTORE} = true ]; then
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-mlstore.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
+elif [ ${RUN} = true ]; then
+	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
 elif [ ${RUN_ALL} = true ]; then
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-all.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
 else
@@ -317,6 +329,8 @@ sleep 2s
 # execute benchmark
 if [ ${RUN_MLSTORE} = true ]; then
 	docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./bin/benchmark-run-all.sh config/benchmark-remote-mlstore.properties"
+elif [ ${RUN} = true ]; then
+    docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./bin/benchmark-run-all.sh config/benchmark-remote.properties"
 elif [ ${RUN_ALL} = true ]; then
 	docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./bin/benchmark-run-all.sh config/benchmark-remote-all.properties"
 else
