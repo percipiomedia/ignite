@@ -1,0 +1,90 @@
+<!--
+    Ignite Spring configuration file to startup grid.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/util
+                           http://www.springframework.org/schema/util/spring-util.xsd">
+
+    <bean class="org.apache.ignite.configuration.IgniteConfiguration">
+        <property name="peerClassLoadingEnabled" value="true"/>
+
+        <property name="deploymentMode" value="CONTINUOUS"/>
+
+        <property name="stripedPoolSize" value="IGNITE_STRIPED_POOL_SIZE"/>
+
+        <property name="dataStorageConfiguration">
+            <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+                <property name="defaultDataRegionConfiguration">
+                    <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+                        <property name="persistenceEnabled" value="false"/>
+
+                        <!-- Increasing the buffer size to 4 GB. -->
+                        <property name="checkpointPageBufferSize" value="#{4096L * 1024 * 1024}"/>
+
+                        <property name="name" value="Default_Region"/>
+
+                        <!-- Enable metrics for this data region  -->
+                        <property name="metricsEnabled" value="true"/>
+
+                        <!-- Setting the size of the default region to 2GB. -->
+                        <property name="maxSize" value="#{160L * 1024 * 1024 * 1024}"/>
+
+                    </bean>
+                </property>
+
+                <!-- Enable metrics for Ignite persistence  -->
+                <property name="metricsEnabled" value="true"/>
+
+                <!-- Set the page size to 4 KB -->
+                <property name="pageSize" value="4096"/>
+
+                <!-- Set concurrency level -->
+                <property name="concurrencyLevel" value="128"/>
+            </bean>
+       </property>
+
+        <property name="cacheConfiguration">
+            <list>
+                <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                    <property name="name" value="tx"/>
+
+                    <property name="sqlSchema" value="PUBLIC"/>
+
+                    <property name="sqlEscapeAll" value="true"/>
+
+					<property name="atomicityMode" value="TRANSACTIONAL"/>
+
+					<property name="writeSynchronizationMode" value="FULL_SYNC"/>
+
+					<property name="backups" value="1"/>
+
+                    <property name="cacheMode" value="PARTITIONED"/>
+
+                    <property name="storeKeepBinary" value="true"/>
+                </bean>
+            </list>
+        </property>
+
+        <property name="discoverySpi">
+            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+                <property name="ipFinder">
+                    <bean
+                        class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">
+                        <property name="addresses">
+                            <list>
+                                <!-- In distributed environment, replace with actual hosts IP addresses. -->
+                            	IPLIST
+                            </list>
+                        </property>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+
+    </bean>
+
+</beans>
