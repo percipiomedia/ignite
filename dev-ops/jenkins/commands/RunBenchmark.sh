@@ -187,9 +187,9 @@ do
 
 	result=$(docker run \
         -d=true \
-        -v /home/ec2-user/mgay/ignite_nodes/logs/${node_name}:/opt/jobcase/logs \
-        -v /home/ec2-user/mgay/ignite_nodes/db:/opt/jobcase/data \
-        -v /home/ec2-user/mgay/ignite_nodes/discovery:/opt/jobcase/discovery \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/logs/${node_name}:/opt/jobcase/logs \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/db:/opt/jobcase/data \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/discovery:/opt/jobcase/discovery \
         -v /home/ec2-user/workspace/ValidateIgniteSnapshot/dev-ops:/opt/jobcase/dev-ops \
         -v /var/run/jobcase-snapshot.sock:/var/run/jobcase-snapshot.sock \
         -e IGNITE_CONSISTENT_ID=${node_name} \
@@ -273,9 +273,9 @@ snap_node_name='ignite-jobcase-snapshot'
 
 docker run \
         -d=true \
-        -v /home/ec2-user/mgay/ignite_nodes/logs/${snap_node_name}:/opt/jobcase/logs \
-        -v /home/ec2-user/mgay/ignite_nodes/db:/opt/jobcase/data \
-        -v /home/ec2-user/mgay/ignite_nodes/discovery:/opt/jobcase/discovery \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/logs/${snap_node_name}:/opt/jobcase/logs \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/db:/opt/jobcase/data \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/discovery:/opt/jobcase/discovery \
         -v /var/run/jobcase-snapshot.sock:/var/run/jobcase-snapshot.sock \
         -e IGNITE_CONSISTENT_ID=${snap_node_name} \
         -e "CONFIG_URI=file:///opt/jobcase/config/multicast.discovery.snapshot.service.client.node.config.xml" \
