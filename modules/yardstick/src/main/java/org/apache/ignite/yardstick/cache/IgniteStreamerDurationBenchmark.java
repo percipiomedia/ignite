@@ -164,6 +164,8 @@ public class IgniteStreamerDurationBenchmark extends IgniteAbstractBenchmark {
 
         long start = System.currentTimeMillis();
 
+        final long execTime = start + TimeUnit.SECONDS.toMillis(duration);
+
         final AtomicBoolean stop = new AtomicBoolean();
 
         try {
@@ -179,14 +181,11 @@ public class IgniteStreamerDurationBenchmark extends IgniteAbstractBenchmark {
                         BenchmarkUtils.println("IgniteStreamerBenchmark start load cache [name=" + cacheName + ']');
 
                         try (IgniteDataStreamer<Object, Object> streamer = ignite().dataStreamer(cacheName)) {
-                            while(true) {
+                            while(System.currentTimeMillis() < execTime && !stop.get()) {
 
                                 int key = nextRandom(0, args.range());
 
                                 streamer.addData(key, new SampleValue(key));
-
-                                if (stop.get())
-                                    break;
                             }
                         }
 
@@ -201,15 +200,8 @@ public class IgniteStreamerDurationBenchmark extends IgniteAbstractBenchmark {
                 }));
             }
 
-            for (Future<Void> fut : futs) {
-                try {
-					fut.get(duration, TimeUnit.SECONDS);
-				} catch (Exception e) {
-                    BenchmarkUtils.println("IgniteStreamerBenchmark [exeception=" + e.getMessage() + ']');
-
-					break;
-				}
-            }
+            for (Future<Void> fut : futs)
+                fut.get();
         }
         finally {
             stop.set(true);
