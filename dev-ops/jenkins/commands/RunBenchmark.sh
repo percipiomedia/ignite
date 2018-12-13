@@ -294,9 +294,7 @@ ignite_home=$(docker exec ${snap_node_name} printenv IGNITE_HOME)
 docker exec ${snap_node_name} apt-get update
 docker exec ${snap_node_name} apt-get install bc dstat ssh -y
 
-if [ ${RUN_MLSTORE} = true ]; then
-	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
-fi
+docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
 
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
 
