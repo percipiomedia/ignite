@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.ignite.IgniteDataStreamer;
 import org.apache.ignite.yardstick.IgniteAbstractBenchmark;
@@ -45,11 +46,14 @@ public class IgniteStreamerDurationBenchmark extends IgniteAbstractBenchmark {
     /** */
     private int entries;
 
+    private long duration;
+
     /** {@inheritDoc} */
     @Override public void setUp(BenchmarkConfiguration cfg) throws Exception {
         super.setUp(cfg);
 
         entries = args.range();
+        duration = cfg.duration();
 
         if (entries <= 0)
             throw new IllegalArgumentException("Invalid number of entries: " + entries);
@@ -197,8 +201,15 @@ public class IgniteStreamerDurationBenchmark extends IgniteAbstractBenchmark {
                 }));
             }
 
-            for (Future<Void> fut : futs)
-                fut.get();
+            for (Future<Void> fut : futs) {
+                try {
+					fut.get(duration, TimeUnit.SECONDS);
+				} catch (Exception e) {
+                    BenchmarkUtils.println("IgniteStreamerBenchmark [exeception=" + e.getMessage() + ']');
+
+					break;
+				}
+            }
         }
         finally {
             stop.set(true);
