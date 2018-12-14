@@ -39,7 +39,7 @@ function usage() {
 function parse() {
   # Option strings
   local SHORT=hvds:
-  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:,runall:,runmlstore:,hprof:,jfr:,threadcount:
+  local LONG=help,verbose,debug,num-nodes:,jvm-heap-size:,jvm-meta-size:,stop:,runall:,runmlstore:,hprof:,jfr:,threadcount:,run:
 
   # read the options
   local OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
@@ -60,6 +60,8 @@ function parse() {
   HPROF=false
   JFR=false
   THREADCOUNT=64
+  RUN=false
+  RUN_PROP_FILE=''
 
   # extract options and their arguments into variables.
   while true ; do
@@ -88,6 +90,10 @@ function parse() {
         ;;
       --stop )
         STOP_CONTAINERS="$2"
+        shift 2
+        ;;
+      --run )
+        RUN=true; RUN_PROP_FILE="$2"
         shift 2
         ;;
       --runall )
@@ -181,9 +187,9 @@ do
 
 	result=$(docker run \
         -d=true \
-        -v /home/ec2-user/mgay/ignite_nodes/logs/${node_name}:/opt/jobcase/logs \
-        -v /home/ec2-user/mgay/ignite_nodes/db:/opt/jobcase/data \
-        -v /home/ec2-user/mgay/ignite_nodes/discovery:/opt/jobcase/discovery \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/logs/${node_name}:/opt/jobcase/logs \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/db:/opt/jobcase/data \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/discovery:/opt/jobcase/discovery \
         -v /home/ec2-user/workspace/ValidateIgniteSnapshot/dev-ops:/opt/jobcase/dev-ops \
         -v /var/run/jobcase-snapshot.sock:/var/run/jobcase-snapshot.sock \
         -e IGNITE_CONSISTENT_ID=${node_name} \
@@ -249,6 +255,10 @@ if [ ${RUN_MLSTORE} = true ]; then
 	sed -e "s/IPLIST/${server_hosts_prop}/g" \
 	    -e "s/THREADCOUNT/${THREADCOUNT}/g" \
 		${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-mlstore-template.properties > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-mlstore.properties
+elif [ ${RUN} = true ]; then
+	sed -e "s/IPLIST/${server_hosts_prop}/g" \
+	    -e "s/THREADCOUNT/${THREADCOUNT}/g" \
+		${WORKSPACE}/dev-ops/jenkins/benchmarks/config/${RUN_PROP_FILE} > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote.properties
 elif [ ${RUN_ALL} = true ]; then
 	sed -e "s/IPLIST/${server_hosts_prop}/g" \
 		${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-all-template.properties > ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-all.properties
@@ -263,9 +273,9 @@ snap_node_name='ignite-jobcase-snapshot'
 
 docker run \
         -d=true \
-        -v /home/ec2-user/mgay/ignite_nodes/logs/${snap_node_name}:/opt/jobcase/logs \
-        -v /home/ec2-user/mgay/ignite_nodes/db:/opt/jobcase/data \
-        -v /home/ec2-user/mgay/ignite_nodes/discovery:/opt/jobcase/discovery \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/logs/${snap_node_name}:/opt/jobcase/logs \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/db:/opt/jobcase/data \
+        -v /home/ec2-user/mgay/ignite_nodes_2_7/discovery:/opt/jobcase/discovery \
         -v /var/run/jobcase-snapshot.sock:/var/run/jobcase-snapshot.sock \
         -e IGNITE_CONSISTENT_ID=${snap_node_name} \
         -e "CONFIG_URI=file:///opt/jobcase/config/multicast.discovery.snapshot.service.client.node.config.xml" \
@@ -284,14 +294,14 @@ ignite_home=$(docker exec ${snap_node_name} printenv IGNITE_HOME)
 docker exec ${snap_node_name} apt-get update
 docker exec ${snap_node_name} apt-get install bc dstat ssh -y
 
-if [ ${RUN_MLSTORE} = true ]; then
-	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
-fi
+docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/mlstore-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
 
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/ignite-remote-config.xml ${snap_node_name}:${ignite_home}/benchmarks/config/
 
 if [ ${RUN_MLSTORE} = true ]; then
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-mlstore.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
+elif [ ${RUN} = true ]; then
+	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
 elif [ ${RUN_ALL} = true ]; then
 	docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/config/benchmark-remote-all.properties ${snap_node_name}:${ignite_home}/benchmarks/config/
 else
@@ -309,11 +319,16 @@ docker exec ${snap_node_name} mkdir -p /root/.ssh
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa ${snap_node_name}:/root/.ssh/
 docker cp ${WORKSPACE}/dev-ops/jenkins/benchmarks/ssh/id_rsa.pub ${snap_node_name}:/root/.ssh/
 
+# add jmxterm
+docker cp ${WORKSPACE}/dev-ops/jenkins/tools/jmxterm-1.0.0-uber.jar ${snap_node_name}:${ignite_home}/benchmarks/bin/
+
 sleep 2s
 
 # execute benchmark
 if [ ${RUN_MLSTORE} = true ]; then
 	docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./bin/benchmark-run-all.sh config/benchmark-remote-mlstore.properties"
+elif [ ${RUN} = true ]; then
+    docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./bin/benchmark-run-all.sh config/benchmark-remote.properties"
 elif [ ${RUN_ALL} = true ]; then
 	docker exec ${snap_node_name} /bin/bash -c "cd ${ignite_home}/benchmarks/ && ./bin/benchmark-run-all.sh config/benchmark-remote-all.properties"
 else
