@@ -176,6 +176,9 @@ do
         JVM_OPTS="${JVM_OPTS/JFR_FILE/${probe_file}}"
     fi
 
+    # java crash log file
+    JVM_OPTS=${JVM_OPTS}" -XX:ErrorFile=${LOGS_DIR}/java_error%p.log"
+
     export JAVA_HOME=${JAVA_HOME}
     export MAIN_CLASS='org.yardstickframework.BenchmarkDriverStartUp'
     export JVM_OPTS="${JVM_OPTS}${DRIVER_JVM_OPTS} -Dyardstick.driver${id}"
