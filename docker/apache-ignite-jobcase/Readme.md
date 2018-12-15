@@ -38,7 +38,7 @@ Docker Image:
 Docker Container:
 > * A container is a runnable instance of an image. You can create, start, stop, move, or delete a container using the Docker API or CLI. You can connect a container to one or more networks, attach storage to it, or even create a new image based on its current state.*
 
-## References
+## Links
 
 * [1]: https://apacheignite.readme.io/docs/rest-api/ "Apache Ignite REST-API"
 * [2]: https://docs.docker.com/engine/tutorials/networkingcontainers/ "Networking Containers"
@@ -54,6 +54,7 @@ Docker Container:
 * [12]: https://docs.docker.com/docker-for-mac/networking/ "Docker Networking on Mac"
 * [13]: https://github.com/mal/docker-for-mac-host-bridge "Docker for Mac - Host Bridge"
 * [14]: https://apacheignite.readme.io/docs/binary-marshaller "Apache Ignite Binary Marshaller"
+* [15]: https://apacheignite-sql.readme.io/docs/system-views "Apache Ignite SQL System Views"
 
 ## Build
 
@@ -436,6 +437,38 @@ Enter below connection string to VisualVM or any other monitoring tool:
 ~~~~
 service:jmx:rmi:///jndi/rmi://localhost:9010/jmxrmi
 ~~~~
+
+## SQL System Views
+
+./sqlline.sh --verbose=true -u jdbc:ignite:thin://10.128.97.165/IGNITE
+
+~~~
+
+0: jdbc:ignite:thin://10.128.97.165/IGNITE> select ID, VERSION from NODES;
++--------------------------------+--------------------------------+
+|               ID               |            VERSION             |
++--------------------------------+--------------------------------+
+| 10e78387-75f6-4213-8aaa-436ba1874124 | 2.7.0#20181215-sha1:ba76c203   |
+| bc40b20f-240b-48a0-bfbf-b26b692a6c4b | 2.7.0#20181215-sha1:ba76c203   |
+| 57c00ff7-e12f-4ec6-85e7-bf4d77f7eba1 | 2.7.0#20181215-sha1:ba76c203   |
++--------------------------------+--------------------------------+
+3 rows selected (0.156 seconds)
+
+~~~
+
+~~~
+
+0: jdbc:ignite:thin://10.128.97.165/IGNITE> select NODE_ID, RECEIVED_BYTES_COUNT from NODE_METRICS;
++--------------------------------+--------------------------------+
+|            NODE_ID             |      RECEIVED_BYTES_COUNT      |
++--------------------------------+--------------------------------+
+| 10e78387-75f6-4213-8aaa-436ba1874124 | 138100                         |
+| bc40b20f-240b-48a0-bfbf-b26b692a6c4b | 11208697                       |
+| 57c00ff7-e12f-4ec6-85e7-bf4d77f7eba1 | 3048                           |
++--------------------------------+--------------------------------+
+3 rows selected (0.154 seconds)
+
+~~~
 
 ## Appendix
 
