@@ -155,7 +155,7 @@ COPY ./apache-ignite-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-aop ${I
 
 # Add snapshot manger plugin jar to distribution
 # See https://github.p11a.com/mgay/snapshot-manager-plugin
-COPY ./target/dependency/snapshot-manager-plugin-0.0.1-SNAPSHOT.jar ${IGNITE_HOME}/libs/
+COPY ./target/dependency/snapshot-manager-plugin-${IGNITE_VERSION}-SNAPSHOT.jar ${IGNITE_HOME}/libs/
 
 # Copy log4j2 configuration file
 COPY ./ignite-log4j2.xml ${JOBCASE_CONFIG}/
