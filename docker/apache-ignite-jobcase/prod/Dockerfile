@@ -96,8 +96,7 @@ ENV JVM_ADDITIONAL_OPTS ""
 ENV JVM_OPTS="-server -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC -XX:-UseContainerSupport -Djava.net.preferIPv4Stack=true"
 
 # GC logging is only for Ignite itself, not utilities like Visor or control.sh
-# The filesize is in kilobyte.
-ENV JVM_IGNITE_GC_LOGGING_OPTS="-Xlog:gc*:debug:time,uptime:filecount=10,filesize=100000"
+ENV JVM_IGNITE_GC_LOGGING_OPTS="-Xlog:gc*:debug:time,uptime:filecount=10,filesize=100m"
 
 # Set to true for client mode.  NOTE: The config file must use this variable for it to be effective.
 ENV IGNITE_CLIENT_MODE false
