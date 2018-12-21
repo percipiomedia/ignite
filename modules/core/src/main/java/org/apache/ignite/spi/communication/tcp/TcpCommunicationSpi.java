@@ -1775,8 +1775,9 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter implements Communicati
 
     /**
      * Sets the regular expressions which are used to {@linkplain Matcher#matches filter out}
-     * {@linkplain #nodeAddresses(ClusterNode, boolean) node addresses}. 
-     * If not provided, no node addresses are filtered.
+     * {@linkplain #nodeAddresses(ClusterNode, boolean) node addresses}.  If provided, all 
+     * {@linkplain InetSocketAddress#isUnresolved unresolved} addresses are  automatically 
+     * filtered as their addresses are unknown. If not provided, no node addresses are filtered. 
      *
      * @param filterReachableAddresses the set of regular expressions used to filter node addresses
      * @return {@code this} for chaining.
@@ -3255,10 +3256,23 @@ public class TcpCommunicationSpi extends IgniteSpiAdapter implements Communicati
         if(!this.getNodeAddressExclusionFilters().isEmpty()) {
            final LinkedHashSet<InetSocketAddress> filteredAddrs = new LinkedHashSet<>();
            for (final InetSocketAddress addr : addrs) {
-              for (final Pattern filter : this.getNodeAddressExclusionFilters()) {
-                 if (filter.matcher(addr.getAddress().getHostAddress()).matches()) {
+              InetAddress inetAddr = addr.getAddress();
+              
+              // Unresolved addresses are always filtered since their address is 
+              // unknown and can't be compared.
+              if(inetAddr == null) {
+                 continue;
+              }
+              
+              boolean matchesExclusionFilter = false;
+              for (final Pattern exclusionFilter : this.getNodeAddressExclusionFilters()) {
+                 if (exclusionFilter.matcher(inetAddr.getHostAddress()).matches()) {
+                    matchesExclusionFilter = true;
                     break;
                  }
+              }
+              
+              if(!matchesExclusionFilter) {
                  filteredAddrs.add(addr);
               }
            }
