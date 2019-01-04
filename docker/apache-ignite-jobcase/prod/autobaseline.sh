@@ -1,4 +1,7 @@
 #!/bin/bash
+
+source ./util.sh
+
 # Add this and all nodes to the baseline after waiting for the delay time
 IGNITE_CONSISTENT_ID=$1
 IGNITE_AUTO_BASELINE_DELAY=$2
@@ -15,6 +18,7 @@ then
     $IGNITE_HOME/bin/control.sh --baseline > /tmp/baseline
     if [ $? -eq 0 ]
     then
+        log_info "baseline info: $(cat /tmp/baseline)"
 
         X=`egrep "Cluster state.* active" /tmp/baseline`
         if [ $? -ne 0 ]
