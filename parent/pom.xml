@@ -131,6 +131,9 @@
         <osgi.embed.transitive>false</osgi.embed.transitive>
         <osgi.fail.ok>false</osgi.fail.ok>
 
+		<!-- JVM 11 missing packages -->
+		<jaxb.api.version>2.3.0</jaxb.api.version>
+
     </properties>
 
     <groupId>org.apache.ignite</groupId>

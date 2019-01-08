@@ -20,19 +20,10 @@
 #
 
 # Debian package
-FROM debian:stretch
+FROM openjdk:11.0.1-jdk
 
 # Ignite version
 ENV IGNITE_VERSION 2.7.0
-
-# Oracle JDK Linux x64 download information
-ENV JAVA_VERSION=8 \
-    JAVA_UPDATE=192 \
-    JAVA_BUILD=12 \
-    JAVA_PATH=750e1c8617c5452694857ad95c3ee230
-
-# Java home
-ENV JAVA_HOME=/usr/lib/jvm/java-${JAVA_VERSION}-oracle
 
 # JobCase home
 ENV JOBCASE_HOME /opt/jobcase
@@ -105,7 +96,7 @@ ENV JVM_ADDITIONAL_OPTS ""
 ENV JVM_OPTS="-server -XX:+AlwaysPreTouch -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:+DisableExplicitGC -XX:-UseContainerSupport -Djava.net.preferIPv4Stack=true"
 
 # GC logging is only for Ignite itself, not utilities like Visor or control.sh
-ENV JVM_IGNITE_GC_LOGGING_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M"
+ENV JVM_IGNITE_GC_LOGGING_OPTS="-Xlog:gc*:debug:time,uptime:filecount=10,filesize=100m"
 
 # Set to true for client mode.  NOTE: The config file must use this variable for it to be effective.
 ENV IGNITE_CLIENT_MODE false
@@ -125,18 +116,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         netcat-openbsd \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p ${JOBCASE_LOGS}
-
-# Install Oracle JDK and Java Cryptography Extension (JCE) Unlimited Strength
-RUN cd "/tmp" && \
-    wget --header "Cookie: oraclelicense=accept-securebackup-cookie;" \
-        "http://download.oracle.com/otn-pub/java/jdk/${JAVA_VERSION}u${JAVA_UPDATE}-b${JAVA_BUILD}/${JAVA_PATH}/jdk-${JAVA_VERSION}u${JAVA_UPDATE}-linux-x64.tar.gz" && \
-    tar -xzf "jdk-${JAVA_VERSION}u${JAVA_UPDATE}-linux-x64.tar.gz" && \
-    mkdir -p "/usr/lib/jvm" && \
-    mv "/tmp/jdk1.${JAVA_VERSION}.0_${JAVA_UPDATE}" "${JAVA_HOME}" && \
-    wget --header "Cookie: oraclelicense=accept-securebackup-cookie;" \
-        "http://download.oracle.com/otn-pub/java/jce/${JAVA_VERSION}/jce_policy-${JAVA_VERSION}.zip" && \
-    unzip -jo -d "${JAVA_HOME}/jre/lib/security" "jce_policy-${JAVA_VERSION}.zip" && \
-    rm /tmp/*
 
 # Copy apache ignite binaries
 COPY ./apache-ignite-${IGNITE_VERSION}-SNAPSHOT-bin ${IGNITE_HOME}/
