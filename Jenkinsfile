@@ -23,16 +23,17 @@ pipeline {
       stage ('Run Build') {
           steps {
             script {
-              def server = Artifactory.server("${ARTIFACTORY_SERVER_ID}")
-
               // Create an Artifactory server instance, as described above in this article:
               def server = Artifactory.server("${ARTIFACTORY_SERVER_ID}")
+
               // Create and set an Artifactory Maven Build instance:
               def rtMaven = Artifactory.newMavenBuild()
               rtMaven.resolver server: server, releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot'
               rtMaven.deployer server: server, releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local'
+
               // Set a Maven Tool defined in Jenkins "Manage":
               rtMaven.tool = MAVEN_TOOL
+
               // Run Maven:
               def buildInfo = rtMaven.run pom: 'pom.xml', goals: "clean install -Pall-java,all-scala,licenses -DskipTests -Drelease.version=${RELEASE_VERSION}"
 
