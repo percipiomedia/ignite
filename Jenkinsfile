@@ -16,12 +16,6 @@ pipeline {
   }
 
   stages {
-      stage ('Clone repository') {
-          steps {
-              // git branch: "${BRANCH_NAME}", url: "${REPO_URL}"
-          }
-      }
-
       stage ('Artifactory configuration') {
           steps {
               // rtMavenResolver closure, which defines the dependencies resolution details
