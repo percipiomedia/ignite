@@ -4,6 +4,10 @@ pipeline {
 
   agent any
 
+  tools {
+    jdk 'jdk8'
+  }
+
   environment {
       BRANCH_NAME = "ignite-2.7"
       RELEASE_VERSION = "2.7.0"
@@ -16,44 +20,25 @@ pipeline {
   }
 
   stages {
-      stage ('Artifactory configuration') {
-          steps {
-              // rtMavenResolver closure, which defines the dependencies resolution details
-              rtMavenResolver (
-                  id: "MAVEN_RESOLVER",
-                  serverId: "${ARTIFACTORY_SERVER_ID}",
-                  releaseRepo: "libs-release",
-                  snapshotRepo: "libs-snapshot"
-              )
-
-              // rtMavenDeployer closure, which defines the artifacts deployment details
-              rtMavenDeployer (
-                  id: "MAVEN_DEPLOYER",
-                  serverId: "${ARTIFACTORY_SERVER_ID}",
-                  releaseRepo: "libs-release-local",
-                  snapshotRepo: "libs-snapshot-local"
-              )
-
-          }
-      }
-
       stage ('Run Build') {
           steps {
-              rtMavenRun (
-                  tool: MAVEN_TOOL, // Tool name from Jenkins configuration
-                  pom: 'pom.xml',
-                  goals: "clean install -Pall-java,all-scala,licenses -DskipTests -Drelease.version=${RELEASE_VERSION}",
-                  deployerId: "MAVEN_DEPLOYER",
-                  resolverId: "MAVEN_RESOLVER"
-              )
-          }
-      }
+            script {
+              def server = Artifactory.server("${ARTIFACTORY_SERVER_ID}")
 
-      stage ('Publish build info') {
-          steps {
-              rtPublishBuildInfo (
-                  serverId: "${ARTIFACTORY_SERVER_ID}"
-              )
+              // Create an Artifactory server instance, as described above in this article:
+              def server = Artifactory.server("${ARTIFACTORY_SERVER_ID}")
+              // Create and set an Artifactory Maven Build instance:
+              def rtMaven = Artifactory.newMavenBuild()
+              rtMaven.resolver server: server, releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot'
+              rtMaven.deployer server: server, releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local'
+              // Set a Maven Tool defined in Jenkins "Manage":
+              rtMaven.tool = MAVEN_TOOL
+              // Run Maven:
+              def buildInfo = rtMaven.run pom: 'pom.xml', goals: "clean install -Pall-java,all-scala,licenses -DskipTests -Drelease.version=${RELEASE_VERSION}"
+
+              // Publish the build-info to Artifactory:
+              server.publishBuildInfo buildInfo
+            }
           }
       }
   }
