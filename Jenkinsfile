@@ -46,5 +46,17 @@ pipeline {
             }
           }
       }
+
+      stage ('Run Core Basic Unit tests') {
+          steps {
+            sh 'mvn -f modules/core/pom.xml clean test -DskipTests=false -Dtest=org.apache.ignite.testsuites.IgniteBasicTestSuite'
+          }
+          post {
+                always {
+                    junit '**/target/surefire-reports/TEST*.xml'
+                }
+          }
+      }
+
   }
 }
