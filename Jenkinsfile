@@ -6,6 +6,10 @@ pipeline {
     label 'docker'
   }
 
+  options {
+    disableConcurrentBuilds()
+  }
+
   tools {
     jdk 'JDK8u181'
     maven 'Maven 3.3.9'
