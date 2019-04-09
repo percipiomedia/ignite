@@ -20,8 +20,7 @@ pipeline {
   }
 
   parameters {
-    booleanParam(name: 'RUN_UNIT_TESTS', defaultValue: true, description: '')
-    string(name: 'Greeting', defaultValue: 'Hello', description: 'How should I greet the world?')
+    booleanParam(name: 'RUN_UNIT_TESTS', defaultValue: false, description: '')
   }
 
   stages {
@@ -74,6 +73,27 @@ pipeline {
           sh 'mvn -f pom.xml initialize -Prelease -X'
         }
     }
+
+    stage ('Build Docker Image') {
+        steps {
+          sh '''#!/bin/bash
+            id
+
+            mvn -f docker/apache-ignite-jobcase/prod/pom.xml dependency:copy-dependencies
+
+            cd ${WORKSPACE}/docker/apache-ignite-jobcase/prod
+
+            rm -rf ./apache-ignite-*
+
+            # copy maven build result into docker build path
+            cp ${WORKSPACE}/target/bin/apache-ignite-*-bin.zip .
+            unzip apache-ignite-*-bin.zip
+
+            docker build -t apacheignite/jobcase:2.7.0 .
+           '''
+        }
+    }
+
 
   }
 }
