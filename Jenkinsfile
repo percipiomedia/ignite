@@ -60,7 +60,7 @@ pipeline {
             }
         }
         steps {
-          sh 'mvn -f modules/core/pom.xml clean test -DskipTests=false -Dtest=org.apache.ignite.testsuites.IgniteBasicTestSuite -Dmaven.test.failure.ignore=true'
+          sh "mvn -f modules/core/pom.xml test -DskipTests=false -Dtest=org.apache.ignite.testsuites.IgniteBasicTestSuite -Dmaven.test.failure.ignore=true -Drelease.version=${RELEASE_VERSION}"
         }
         post {
               always {
