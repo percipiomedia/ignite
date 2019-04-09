@@ -37,7 +37,7 @@ pipeline {
               rtMaven.tool = "${MAVEN_TOOL}"
 
               // Run Maven:
-              def buildInfo = rtMaven.run pom: 'pom.xml', goals: "clean install -Pall-java,all-scala,licenses -DskipTests -Drelease.version=${RELEASE_VERSION}.toString()"
+              def buildInfo = rtMaven.run pom: 'pom.xml', goals: 'clean install -Pall-java,all-scala,licenses -DskipTests -Drelease.version=2.7.0'
 
               // Publish the build-info to Artifactory:
               server.publishBuildInfo buildInfo
