@@ -18,6 +18,7 @@ pipeline {
   }
 
   parameters {
+    booleanParam(name: 'RUN_UNIT_TESTS', defaultValue: true, description: '')
     string(name: 'Greeting', defaultValue: 'Hello', description: 'How should I greet the world?')
   }
 
@@ -48,8 +49,13 @@ pipeline {
       }
 
       stage ('Run Core Basic Unit tests') {
+         when {
+              expression {
+                  "${params.RUN_UNIT_TESTS}" == "true"
+              }
+          }
           steps {
-            sh 'mvn -f modules/core/pom.xml clean test -DskipTests=false -Dtest=org.apache.ignite.testsuites.IgniteBasicTestSuite'
+            sh 'mvn -Xms2g -Xmx2g -f modules/core/pom.xml test -DskipTests=false -Dtest=org.apache.ignite.testsuites.IgniteBasicTestSuite -Dmaven.test.failure.ignore=true'
           }
           post {
                 always {
