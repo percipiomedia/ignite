@@ -30,7 +30,8 @@ pipeline {
 
               // Create and set an Artifactory Maven Build instance:
               def rtMaven = Artifactory.newMavenBuild()
-              rtMaven.resolver server: server, releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot'
+              // Don't resolve artifacts from Artifactory
+              // rtMaven.resolver server: server, releaseRepo: 'libs-release', snapshotRepo: 'libs-snapshot'
               rtMaven.deployer server: server, releaseRepo: 'libs-release-local', snapshotRepo: 'libs-snapshot-local'
 
               // Set a Maven Tool defined in Jenkins "Manage":
