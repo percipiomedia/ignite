@@ -98,6 +98,13 @@ pipeline {
         }
     }
 
+    stage ('Validate Docker Container') {
+        steps {
+          sh '''#!/bin/bash
+            source ${WORKSPACE}/dev-ops/jenkins/pipeline/validate_docker_image.sh
+           '''
+        }
+    }
 
   }
 }
