@@ -1,3 +1,4 @@
+// Pipeline script for Jenkins server environment jenkins.p11a.com
 pipeline {
   // https://jenkins.io/doc/book/pipeline/jenkinsfile/
   // https://www.jfrog.com/confluence/display/RTF/Working+With+Pipeline+Jobs+in+Jenkins
