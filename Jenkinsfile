@@ -152,11 +152,13 @@ pipeline {
     }
 
     stage ('Validate Docker Container') {
-        steps {
-          sh '''#!/bin/bash
-            source ${WORKSPACE}/dev-ops/jenkins/pipeline/validate_docker_image.sh
-           '''
-        }
+      // TODO define a kubernetes agent pod with the ignite image
+      // Validate the pod
+      // steps {
+      //  sh '''#!/bin/bash
+      //    source ${WORKSPACE}/dev-ops/jenkins/pipeline/validate_docker_image.sh
+      //   '''
+      // }
     }
 
     stage ('Push Docker Image') {
