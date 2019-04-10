@@ -27,6 +27,30 @@ pipeline {
   parameters {
     booleanParam(name: 'RUN_UNIT_TESTS', defaultValue: false, description: '')
     string(name: 'DOCKER_IMAGE_NAME', defaultValue: 'platform/apacheignite', description: '')
+
+    // run benchmark parameters
+    booleanParam(name: 'RUN_BENCHMARK_TESTS', defaultValue: false, description: '')
+
+    booleanParam(name: 'USE_COMPUTE', defaultValue: false, description: '')
+    string(name: 'JVM_HEAP_SIZE', defaultValue: '6g', description: '')
+    string(name: 'JVM_METASPACE_SIZE', defaultValue: '2g', description: '')
+    string(name: 'JIRA_USER_NAME', defaultValue: 'mgay@jobcase.com', description: '')
+    string(name: 'JIRA_AUTH_TOKEN', defaultValue: 'hli5MJzMBhL0gmXEfsGuEED7', description: '')
+
+    string(name: 'PARENT_CONFLUENCE_PAGE_ID', defaultValue: '477003947', description: '')
+    string(name: 'CONFLUENCE_SPACE_KEY', defaultValue: '~95425488', description: '')
+    string(name: 'NUM_NODES', defaultValue: '2', description: '')
+
+    booleanParam(name: 'STOP_CONTAINERS', defaultValue: true, description: '')
+    booleanParam(name: 'RUN_ALL', defaultValue: false, description: '')
+    booleanParam(name: 'RUN_MLSTORE', defaultValue: false, description: '')
+
+    booleanParam(name: 'JAVA_FLIGHT_RECORDER', defaultValue: true, description: '')
+
+    string(name: 'THREAD_COUNT', defaultValue: '64', description: '')
+    string(name: 'IGNITE_STRIPED_POOL_SIZE', defaultValue: '8', description: '')
+
+    string(name: 'RUN_BENCHMARK_PROP_FILE', defaultValue: '', description: '')
   }
 
   stages {
@@ -128,5 +152,45 @@ pipeline {
           """
         }
     }
+
+    stage ('Run Benchmark Tests') {
+       environment {
+         // make parameters available as environment settings
+         USE_COMPUTE = "${params.USE_COMPUTE}"
+
+         JVM_HEAP_SIZE = "${params.JVM_HEAP_SIZE}"
+
+         JVM_METASPACE_SIZE = "${params.JVM_METASPACE_SIZE}"
+         JIRA_USER_NAME = "${params.JIRA_USER_NAME}"
+         JIRA_AUTH_TOKEN = "${params.JIRA_AUTH_TOKEN}"
+
+         PARENT_CONFLUENCE_PAGE_ID = "${params.PARENT_CONFLUENCE_PAGE_ID}"
+         CONFLUENCE_SPACE_KEY = "${params.CONFLUENCE_SPACE_KEY}"
+         NUM_NODES = "${params.NUM_NODES}"
+
+         STOP_CONTAINERS = "${params.STOP_CONTAINERS}"
+         RUN_ALL = "${params.RUN_ALL}"
+         RUN_MLSTORE = "${params.RUN_MLSTORE}"
+
+         JAVA_FLIGHT_RECORDER = "${params.JAVA_FLIGHT_RECORDER}"
+
+         THREAD_COUNT = "${params.THREAD_COUNT}"
+         IGNITE_STRIPED_POOL_SIZE = "${params.IGNITE_STRIPED_POOL_SIZE}"
+
+         RUN_BENCHMARK_PROP_FILE = "${params.RUN_BENCHMARK_PROP_FILE}"
+       }
+       when {
+            expression {
+                "${params.RUN_BENCHMARK_TESTS}" == "true"
+            }
+        }
+        steps {
+          sh '''#!/bin/bash
+            source ${WORKSPACE}/dev-ops/jenkins/pipeline/run_benchmark.sh.sh
+           '''
+        }
+    }
+
   }
+
 }
