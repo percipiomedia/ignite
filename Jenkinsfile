@@ -112,7 +112,7 @@ pipeline {
         steps {
           sh """#!/bin/bash
 
-            login_cmd=$(aws --region us-east-1 ecr get-login --no-include-email --registry-ids 669820959381)
+            login_cmd=\$(aws --region us-east-1 ecr get-login --no-include-email --registry-ids 669820959381)
 
             echo "${login_cmd}" > /tmp/docker_login.sh
 
