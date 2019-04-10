@@ -21,10 +21,12 @@ pipeline {
       REPO_URL = "https://github.com/percipiomedia/ignite.git"
       ARTIFACTORY_SERVER_ID = "jobcase"
       MAVEN_TOOL = "Maven 3.3.9"
+      ECR_HOST = "669820959381.dkr.ecr.us-east-1.amazonaws.com"
   }
 
   parameters {
     booleanParam(name: 'RUN_UNIT_TESTS', defaultValue: false, description: '')
+    string(name: 'DOCKER_IMAGE_NAME', defaultValue: 'platform/apacheignite', description: '')
   }
 
   stages {
@@ -93,7 +95,7 @@ pipeline {
             cp ${WORKSPACE}/target/bin/apache-ignite-*-bin.zip .
             unzip apache-ignite-*-bin.zip
 
-            docker build -t apacheignite/jobcase:2.7.0 .
+            docker build -t apacheignite/jobcase:${RELEASE_VERSION} .
            '''
         }
     }
@@ -106,5 +108,27 @@ pipeline {
         }
     }
 
+    stage ('Push Docker Image') {
+        steps {
+          sh '''#!/bin/bash
+
+            login_cmd=$(aws --region us-east-1 ecr get-login --no-include-email --registry-ids 669820959381)
+
+            echo "${login_cmd}" > /tmp/docker_login.sh
+
+            chmod +x /tmp/docker_login.sh
+
+            /tmp/docker_login.sh
+
+            rm /tmp/docker_login.sh
+
+            docker tag apacheignite/jobcase:${RELEASE_VERSION} ${ECR_HOST}/${DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-build${BUILD_NUMBER}
+            docker tag apacheignite/jobcase:${RELEASE_VERSION} ${ECR_HOST}/${DOCKER_IMAGE_NAME}:LATEST2.7
+
+            docker push ${ECR_HOST}/${DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-build${BUILD_NUMBER}
+            docker push ${ECR_HOST}/${DOCKER_IMAGE_NAME}:LATEST2.7
+          '''
+        }
+    }
   }
 }
