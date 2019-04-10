@@ -122,11 +122,11 @@ pipeline {
 
             rm /tmp/docker_login.sh
 
-            docker tag apacheignite/jobcase:${RELEASE_VERSION} ${ECR_HOST}/${DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-build${BUILD_NUMBER}
-            docker tag apacheignite/jobcase:${RELEASE_VERSION} ${ECR_HOST}/${DOCKER_IMAGE_NAME}:LATEST2.7
+            docker tag apacheignite/jobcase:${RELEASE_VERSION} ${ECR_HOST}/${params.DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-build${BUILD_NUMBER}
+            docker tag apacheignite/jobcase:${RELEASE_VERSION} ${ECR_HOST}/${params.DOCKER_IMAGE_NAME}:LATEST2.7
 
-            docker push ${ECR_HOST}/${DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-build${BUILD_NUMBER}
-            docker push ${ECR_HOST}/${DOCKER_IMAGE_NAME}:LATEST2.7
+            docker push ${ECR_HOST}/${params.DOCKER_IMAGE_NAME}:${RELEASE_VERSION}-build${BUILD_NUMBER}
+            docker push ${ECR_HOST}/${params.DOCKER_IMAGE_NAME}:LATEST2.7
           '''
         }
     }
