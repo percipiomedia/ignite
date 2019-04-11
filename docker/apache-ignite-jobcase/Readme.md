@@ -61,7 +61,7 @@ Docker Container:
 Run all three maven commands in the project root directory
 
 ~~~~
-mvn clean install -Pall-java,all-scala,licenses -DskipTests -Drelease.version=2.7.0
+mvn clean install -Pall-java,all-scala,licenses -DskipTests=true -Drelease.version=2.7.0
 mvn initialize -Prelease -X
 ~~~~
 
