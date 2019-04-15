@@ -42,6 +42,8 @@ if [ -e "$IGNITE_PERSISTENT_STORE/host.info" ]; then
 fi
 
 # form a consistent ID from the ECS host's name and the cluster name
+# It only applies for ECS environment.
+# In any other environment, the environment variable needs explicitly specified.
 if [ -z "$IGNITE_CONSISTENT_ID" ]; then
     if [ -z $IGNITE_CONSISTENT_ID_PREFIX ]; then
          IGNITE_CONSISTENT_ID_PREFIX=${IGNITE_CLUSTER_NAME}

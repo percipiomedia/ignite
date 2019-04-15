@@ -153,6 +153,10 @@ COPY ./apache-ignite-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-aws ${I
 # Enable AOP support
 COPY ./apache-ignite-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-aop ${IGNITE_HOME}/libs/ignite-aop/
 
+# Enable TCP Discovery IP Finder that uses a dedicated Kubernetes service
+# for IP addresses lookup of Apache Ignite pods containerized by Kubernetes.
+COPY ./apache-ignite-${IGNITE_VERSION}-SNAPSHOT-bin/libs/optional/ignite-kubernetes ${IGNITE_HOME}/libs/ignite-kubernetes/
+
 # Add snapshot manger plugin jar to distribution
 # See https://github.p11a.com/mgay/snapshot-manager-plugin
 COPY ./target/dependency/snapshot-manager-plugin-${IGNITE_VERSION}-SNAPSHOT.jar ${IGNITE_HOME}/libs/
@@ -171,6 +175,9 @@ COPY ./file.discovery.node.config.xml ${JOBCASE_CONFIG}/
 
 # Copy s3 bucket discovery grid configuration file
 COPY ./s3bucket.discovery.node.config.xml ${JOBCASE_CONFIG}/
+
+# Copy kubernetes discovery grid configuration file
+COPY ./kubernetes.discovery.node.config.xml ${JOBCASE_CONFIG}/
 
 # Copy default grid configuration file
 COPY ./multicast.discovery.node.config.xml ${JOBCASE_CONFIG}/
