@@ -38,7 +38,7 @@ Docker Image:
 Docker Container:
 > * A container is a runnable instance of an image. You can create, start, stop, move, or delete a container using the Docker API or CLI. You can connect a container to one or more networks, attach storage to it, or even create a new image based on its current state.*
 
-## Links
+## Resources
 
 * [1]: https://apacheignite.readme.io/docs/rest-api/ "Apache Ignite REST-API"
 * [2]: https://docs.docker.com/engine/tutorials/networkingcontainers/ "Networking Containers"
@@ -55,6 +55,8 @@ Docker Container:
 * [13]: https://github.com/mal/docker-for-mac-host-bridge "Docker for Mac - Host Bridge"
 * [14]: https://apacheignite.readme.io/docs/binary-marshaller "Apache Ignite Binary Marshaller"
 * [15]: https://apacheignite-sql.readme.io/docs/system-views "Apache Ignite SQL System Views"
+* [16]: https://apacheignite-mix.readme.io/docs/kubernetes-discovery
+* [17]: https://github.p11a.com/helm-charts/apache-ignite
 
 ## Build
 
@@ -287,6 +289,19 @@ Start container using S3 bucket node discovery:
 ~~~~
     -e "CONFIG_URI=file:///opt/jobcase/config/s3bucket.discovery.node.config.xml"
 ~~~~
+
+#### Kubernetes
+
+Start container with Apache Ignite Kubernetes discovery:
+
+~~~~
+    -e "CONFIG_URI=file:///opt/jobcase/config/kubernetes.discovery.node.config.xml"
+    -e "IGNITE_CONSISTENT_ID=<pod name>"
+    -e "IGNITE_DISCOVERY_KUBE_SERVICE_NAME=<kubernetes service name>"
+    -e "IGNITE_DISCOVERY_KUBE_NAMESPACE=<namespace of the kubernetes service>"
+~~~~
+
+The Github repository [Jobcase Apache Ignite chart](https://github.p11a.com/helm-charts/apache-ignite) includes the Helm chart for deploying Apache Ignite into Kubernetes cluster.
 
 ### Grid Persistence
 
