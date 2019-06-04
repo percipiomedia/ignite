@@ -346,6 +346,8 @@
                                             </fileset>
                                         </replaceregexp>
 
+                                        <!--
+                                          Don't disable java assertions in build result archive.
                                         <replaceregexp byline="true">
                                             <regexp pattern="ENABLE_ASSERTIONS=.*" />
                                             <substitution expression="ENABLE_ASSERTIONS=&quot;0&quot;" />
@@ -361,6 +363,7 @@
                                                 <include name="**/*.bat" />
                                             </fileset>
                                         </replaceregexp>
+                                         -->
 
                                         <replaceregexp byline="true">
                                             <regexp pattern="-DIGNITE_UPDATE_NOTIFIER=false" />

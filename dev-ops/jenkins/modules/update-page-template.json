@@ -1,0 +1,17 @@
+{
+	"id": "$PAGE_ID",
+	"type": "page",
+	"title": "$PAGE_TITLE",
+	"space": {
+		"key": "$SPACE_KEY"
+	},
+	"body": {
+		"storage": {
+			"value": "$HTML_CONTENT",
+			"representation": "storage"
+		}
+	},
+	"version": {
+		"number": 2
+	}
+}
